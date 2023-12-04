@@ -18,11 +18,11 @@ func TestGeneratePrivateKey(t *testing.T) {
 	// 개인 키가 nil인 경우가 있는지 체크
 	assert.NotNil(t, privateKey)
 
-	// 공개 키가 유효한지 확인
+	// 공개 키가 유효한지 체크
 	publicKey := privateKey.Public()
 	assert.NotNil(t, publicKey)
 
-	// 공개 키 타입이 *ecdsa.PublicKey인지 확인
+	// 공개 키 타입이 *ecdsa.PublicKey을 만족하는지 체크
 	_, ok := publicKey.(*ecdsa.PublicKey)
 	assert.True(t, ok)
 }
