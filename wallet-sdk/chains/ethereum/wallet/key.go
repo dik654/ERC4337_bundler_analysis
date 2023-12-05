@@ -1,4 +1,4 @@
-package keyring
+package wallet
 
 import (
 	"crypto/ecdsa"

@@ -4,13 +4,13 @@ import (
 	"crypto/ecdsa"
 	"testing"
 
-	keyring "github.com/dik654/Go_projects/wallet-sdk/chains/ethereum"
+	key "github.com/dik654/Go_projects/wallet-sdk/chains/ethereum/wallet"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
 	// 개인 키 생성
-	privateKey, err := keyring.GeneratePrivateKey()
+	privateKey, err := key.GeneratePrivateKey()
 
 	// 개인키 생성 도중 에러가 없는지 체크
 	assert.NoError(t, err)
