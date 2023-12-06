@@ -47,6 +47,10 @@ func init() {
 	userservice = services.NewUserService(usercollection, ctx)
 	usercontroller = controllers.New(userservice)
 	server = gin.Default()
+	server.ForwardedByClientIP = true
+	server.SetTrustedProxies([]string{
+		"127.0.0.1",
+	})
 }
 
 func main() {
