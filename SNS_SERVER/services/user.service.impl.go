@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
+	hashing "github.com/dik654/Go_projects/SNS_SERVER/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -22,6 +23,7 @@ func NewUserService(usercollection *mongo.Collection, ctx context.Context) UserS
 }
 
 func (u *UserServiceImpl) CreateUser(user *models.User) error {
+	user.Password = hashing.HashingPassword(user.Password)
 	_, err := u.usercollection.InsertOne(u.ctx, user)
 	return err
 }
@@ -57,8 +59,6 @@ func (u *UserServiceImpl) GetAll() ([]*models.User, error) {
 		return nil, errors.New("documents not found")
 	}
 	return users, nil
-
-	return nil, nil
 }
 
 func (u *UserServiceImpl) UpdateUser(user *models.User) error {

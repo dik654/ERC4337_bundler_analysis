@@ -8,6 +8,7 @@ import (
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers"
 	"github.com/dik654/Go_projects/SNS_SERVER/services"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -24,6 +25,10 @@ var (
 )
 
 func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+
 	ctx = context.Background()
 
 	mongoconn := options.Client().ApplyURI("mongodb://localhost:27017")
