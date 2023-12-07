@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
-	hashing "github.com/dik654/Go_projects/SNS_SERVER/utils"
+	"github.com/dik654/Go_projects/SNS_SERVER/utils"
 	"github.com/gin-contrib/sessions"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,7 +27,7 @@ func NewUserService(usercollection *mongo.Collection, ctx context.Context) UserS
 }
 
 func (u *UserServiceImpl) CreateUser(user *models.User) error {
-	user.Password = hashing.HashingPassword(user.Password)
+	user.Password = utils.HashingPassword(user.Password)
 	_, err := u.usercollection.InsertOne(u.ctx, user)
 	return err
 }
@@ -109,16 +110,21 @@ func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInR
 	if err := u.usercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
 		return err
 	}
-	requestHashedPassword := hashing.HashingPassword(signInReq.Password)
+	requestHashedPassword := utils.HashingPassword(signInReq.Password)
 	if user.Password != requestHashedPassword {
 		return errors.New("LOGIN_ERROR: invalid password")
 	}
+
 	session.Options(sessions.Options{
 		HttpOnly: true,
 		Secure:   true,
 		MaxAge:   int(30 * time.Minute),
 	})
 	session.Set("user", signInReq.ID)
+	signature := utils.CreateSignature(signInReq.ID, os.Getenv("SECRET_KEY"))
+	combinedValue := utils.CombineSessionDataAndSignature(signInReq.ID, signature)
+	session.Set("session_cookie", combinedValue)
+
 	session.Save()
 	return nil
 }

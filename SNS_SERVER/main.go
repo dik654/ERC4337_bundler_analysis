@@ -59,5 +59,6 @@ func main() {
 	basepath := server.Group("/v1")
 	usercontroller.RegisterUserRoutes(basepath)
 
+	// production 환경에서는 RunTLS로 https 통신을 사용해야함 (쿠키보안 등)
 	log.Fatal(server.Run(":9090"))
 }
