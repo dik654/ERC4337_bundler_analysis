@@ -1,6 +1,9 @@
 package services
 
-import "github.com/dik654/Go_projects/SNS_SERVER/models"
+import (
+	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
+	"github.com/dik654/Go_projects/SNS_SERVER/models"
+)
 
 type UserService interface {
 	CreateUser(*models.User) error
@@ -8,4 +11,6 @@ type UserService interface {
 	GetAll() ([]*models.User, error)
 	UpdateUser(*models.User) error
 	DeleteUser(*string) error
+	SignIn(dto.SignInRequest) error
+	SignOut() error
 }

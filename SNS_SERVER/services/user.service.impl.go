@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
 	hashing "github.com/dik654/Go_projects/SNS_SERVER/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -56,7 +57,7 @@ func (u *UserServiceImpl) GetAll() ([]*models.User, error) {
 	cursor.Close(u.ctx)
 
 	if len(users) == 0 {
-		return nil, errors.New("documents not found")
+		return nil, errors.New("GETALL_USER_ERROR: documents not found")
 	}
 	return users, nil
 }
@@ -84,7 +85,7 @@ func (u *UserServiceImpl) UpdateUser(user *models.User) error {
 	}
 	result, _ := u.usercollection.UpdateOne(u.ctx, filter, update)
 	if result.MatchedCount != 1 {
-		return errors.New("no matched document found for update")
+		return errors.New("UPDATE_USER_ERROR: no matched document found for update")
 	}
 	return nil
 }
@@ -93,7 +94,26 @@ func (u *UserServiceImpl) DeleteUser(name *string) error {
 	filter := bson.D{bson.E{Key: "user_name", Value: name}}
 	result, _ := u.usercollection.DeleteOne(u.ctx, filter)
 	if result.DeletedCount != 1 {
-		return errors.New("no matched document found for delete")
+		return errors.New("DELETE_USER_ERROR: no matched document found for delete")
 	}
+	return nil
+}
+
+func (u *UserServiceImpl) SignIn(signInReq dto.SignInRequest) error {
+	var user *dto.SignInRequest
+	query := bson.D{
+		{Key: "user_id", Value: signInReq.ID},
+	}
+	if err := u.usercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
+		return err
+	}
+	requestHashedPassword := hashing.HashingPassword(signInReq.Password)
+	if user.Password != requestHashedPassword {
+		return errors.New("LOGIN_ERROR: invalid password")
+	}
+	return nil
+}
+
+func (u *UserServiceImpl) SignOut() error {
 	return nil
 }
