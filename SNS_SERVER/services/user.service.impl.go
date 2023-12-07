@@ -3,10 +3,12 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
 	hashing "github.com/dik654/Go_projects/SNS_SERVER/utils"
+	"github.com/gin-contrib/sessions"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -99,7 +101,7 @@ func (u *UserServiceImpl) DeleteUser(name *string) error {
 	return nil
 }
 
-func (u *UserServiceImpl) SignIn(signInReq dto.SignInRequest) error {
+func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInRequest) error {
 	var user *dto.SignInRequest
 	query := bson.D{
 		{Key: "user_id", Value: signInReq.ID},
@@ -111,9 +113,27 @@ func (u *UserServiceImpl) SignIn(signInReq dto.SignInRequest) error {
 	if user.Password != requestHashedPassword {
 		return errors.New("LOGIN_ERROR: invalid password")
 	}
+	session.Options(sessions.Options{
+		HttpOnly: true,
+		Secure:   true,
+		MaxAge:   int(30 * time.Minute),
+	})
+	session.Set("user", signInReq.ID)
+	session.Save()
 	return nil
 }
 
-func (u *UserServiceImpl) SignOut() error {
+func (u *UserServiceImpl) SignOut(session sessions.Session) error {
+	user := session.Get("user")
+	if user == nil {
+		return errors.New("LOGOUT_ERROR: Invalid session token")
+	}
+	session.Delete("user")
+	session.Options(sessions.Options{MaxAge: -1})
+	err := session.Save()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

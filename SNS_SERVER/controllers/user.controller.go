@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
@@ -74,13 +75,13 @@ func (uc *UserController) DeleteUser(ctx *gin.Context) {
 }
 
 func (uc *UserController) SignIn(ctx *gin.Context) {
+	session := sessions.Default(ctx)
 	var signInReq dto.SignInRequest
-
 	if err := ctx.ShouldBindJSON(&signInReq); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := uc.UserService.SignIn(signInReq); err != nil {
+	if err := uc.UserService.SignIn(session, signInReq); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
@@ -88,20 +89,32 @@ func (uc *UserController) SignIn(ctx *gin.Context) {
 }
 
 func (uc *UserController) SignOut(ctx *gin.Context) {
-
+	session := sessions.Default(ctx)
+	var signInReq dto.SignInRequest
+	if err := ctx.ShouldBindJSON(&signInReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := uc.UserService.SignOut(session); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
-	store := cookie.NewStore([]byte("secret"))
+	store := cookie.NewStore([]byte(os.Getenv("SECRET")))
 
-	userroute := rg.Group("/user")
-	userroute.POST("/create", uc.CreateUser)
-	userroute.GET("/get/:name", uc.GetUser)
-	userroute.GET("/getall", uc.GetAll)
-	userroute.PATCH("/update", uc.UpdateUser)
-	userroute.DELETE("/delete/:name", uc.DeleteUser)
+	registerroute := rg.Group("/register")
+	registerroute.POST("/create", uc.CreateUser)
+	registerroute.GET("/get/:name", uc.GetUser)
+	registerroute.GET("/getall", uc.GetAll)
+	registerroute.PATCH("/update", uc.UpdateUser)
+	registerroute.DELETE("/delete/:name", uc.DeleteUser)
 	loginroute := rg.Group("login")
 	loginroute.Use(sessions.Sessions("mysession", store))
 	loginroute.POST("/signin", uc.SignIn)
 	loginroute.POST("/signout", uc.SignOut)
+	// privateroute := rg.Group("/private")
+	// privateroute.Use(middleware.EnsureLoggedIn())
 }
