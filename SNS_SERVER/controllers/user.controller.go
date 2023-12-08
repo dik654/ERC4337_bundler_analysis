@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -11,16 +13,21 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 )
 
 type UserController struct {
-	UserService services.UserService
-	ctx         context.Context
+	UserService       services.UserService
+	googleOauthConfig *oauth2.Config
+	oauthStateString  string
+	ctx               context.Context
 }
 
-func New(userservice services.UserService) UserController {
+func New(userservice services.UserService, googleOauthConfig *oauth2.Config, oauthStateString string) UserController {
 	return UserController{
-		UserService: userservice,
+		UserService:       userservice,
+		googleOauthConfig: googleOauthConfig,
+		oauthStateString:  oauthStateString,
 	}
 }
 
@@ -102,6 +109,48 @@ func (uc *UserController) SignOut(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
+func (uc *UserController) GoogleSignIn(ctx *gin.Context) {
+	url := uc.googleOauthConfig.AuthCodeURL(uc.oauthStateString)
+	ctx.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func (uc *UserController) GoogleSignInCallback(ctx *gin.Context) {
+	// 인증 코드 가져오기
+	code := ctx.Query("code")
+
+	// 인증 코드를 사용하여 토큰 교환
+	token, err := uc.googleOauthConfig.Exchange(ctx, code)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 액세스 토큰을 사용하여 사용자 정보 가져오기
+	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	defer response.Body.Close()
+
+	userInfo := struct {
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
+	}{}
+	err = json.NewDecoder(response.Body).Decode(&userInfo)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Fprintf(ctx.Writer, "UserInfo: %s\n", userInfo)
+}
+
+func (uc *UserController) GoogleSignOut(ctx *gin.Context) {
+
+}
+
 func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
 	store := cookie.NewStore([]byte(os.Getenv("SECRET")))
 
@@ -115,6 +164,8 @@ func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
 	loginroute.Use(sessions.Sessions("mysession", store))
 	loginroute.POST("/signin", uc.SignIn)
 	loginroute.POST("/signout", uc.SignOut)
+	loginroute.GET("/glogin", uc.GoogleSignIn)
+	loginroute.GET("/glogincallback", uc.GoogleSignInCallback)
 	// privateroute := rg.Group("/private")
 	// privateroute.Use(middleware.EnsureLoggedIn())
 }

@@ -143,3 +143,11 @@ func (u *UserServiceImpl) SignOut(session sessions.Session) error {
 
 	return nil
 }
+
+func (u *UserServiceImpl) GoogleSignIn() error {
+	return nil
+}
+
+func (u *UserServiceImpl) GoogleSignOut() error {
+	return nil
+}
