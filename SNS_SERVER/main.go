@@ -8,6 +8,7 @@ import (
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers"
 	"github.com/dik654/Go_projects/SNS_SERVER/services"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,9 +32,18 @@ var (
 )
 
 func init() {
+
+	//
+	// GODOTENV
+	//
+
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)
 	}
+
+	//
+	// GOOGLE_OAUTH
+	//
 
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:9090/v1/login/glogincallback",
@@ -46,6 +56,16 @@ func init() {
 		Endpoint: google.Endpoint,
 	}
 	oauthStateString = os.Getenv("SECRET_KEY")
+
+	//
+	// REDIS
+	//
+
+	store, _ := sessions.NewRedisStore(10, "tcp", "localhost:6379", "", []byte("secret"))
+
+	//
+	// MONGO_DB
+	//
 
 	ctx = context.Background()
 
@@ -63,8 +83,13 @@ func init() {
 
 	usercollection = mongoclient.Database("userdb").Collection("users")
 	googleusercollection = mongoclient.Database("userdb").Collection("google_users")
+	usercontroller = controllers.New(userservice, store, googleOauthConfig, oauthStateString)
 	userservice = services.NewUserService(usercollection, googleusercollection, ctx)
-	usercontroller = controllers.New(userservice, googleOauthConfig, oauthStateString)
+
+	//
+	// GO GIN
+	//
+
 	server = gin.Default()
 	server.ForwardedByClientIP = true
 	server.SetTrustedProxies([]string{

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/utils"
-	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 

@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
-	"github.com/gin-contrib/sessions"
+	// "github.com/gin-contrib/sessions"
 )
 
 type UserService interface {
@@ -12,8 +12,9 @@ type UserService interface {
 	GetAll() ([]*models.User, error)
 	UpdateUser(*models.User) error
 	DeleteUser(*string) error
-	SignIn(sessions.Session, dto.SignInRequest) error
-	SignOut(sessions.Session) error
-	GoogleSignIn(sessions.Session, *models.GoogleUser) error
-	GoogleSignOut(sessions.Session) error
+	SignIn(dto.SignInRequest) ([]byte, error)
+	SignOut() error
+	GoogleSignIn(models.GoogleUser) ([]byte, error)
+	GoogleSignOut() error
+	Test() error
 }

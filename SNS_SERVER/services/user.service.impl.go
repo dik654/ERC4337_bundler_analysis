@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"os"
-	"time"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
 	"github.com/dik654/Go_projects/SNS_SERVER/utils"
-	"github.com/gin-contrib/sessions"
+
+	// "github.com/gin-contrib/sessions"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -104,48 +105,30 @@ func (u *UserServiceImpl) DeleteUser(name *string) error {
 	return nil
 }
 
-func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInRequest) error {
+func (u *UserServiceImpl) SignIn(signInReq dto.SignInRequest) ([]byte, error) {
 	var user *dto.SignInRequest
 	query := bson.D{
 		{Key: "user_id", Value: signInReq.ID},
 	}
 	if err := u.usercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
-		return err
+		return nil, err
 	}
 	requestHashedPassword := utils.HashingPassword(signInReq.Password)
 	if user.Password != requestHashedPassword {
-		return errors.New("LOGIN_ERROR: invalid password")
+		return nil, errors.New("LOGIN_ERROR: invalid password")
 	}
 
-	session.Options(sessions.Options{
-		HttpOnly: true,
-		Secure:   true,
-		MaxAge:   int(30 * time.Minute),
-	})
-	session.Set("regular_user", signInReq.ID)
 	signature := utils.CreateSignature(signInReq.ID, os.Getenv("SECRET_KEY"))
 	combinedValue := utils.CombineSessionDataAndSignature(signInReq.ID, signature)
-	session.Set("session_cookie", combinedValue)
 
-	session.Save()
+	return combinedValue, nil
+}
+
+func (u *UserServiceImpl) SignOut() error {
 	return nil
 }
 
-func (u *UserServiceImpl) SignOut(session sessions.Session) error {
-	user := session.Get("user")
-	if user == nil {
-		return errors.New("LOGOUT_ERROR: Invalid session token")
-	}
-	session.Delete("user")
-	session.Options(sessions.Options{MaxAge: -1})
-	if err := session.Save(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (u *UserServiceImpl) GoogleSignIn(session sessions.Session, userInfo *models.GoogleUser) error {
+func (u *UserServiceImpl) GoogleSignIn(userInfo models.GoogleUser) ([]byte, error) {
 	var user *models.GoogleUser
 	query := bson.D{
 		bson.E{
@@ -153,40 +136,27 @@ func (u *UserServiceImpl) GoogleSignIn(session sessions.Session, userInfo *model
 			Value: userInfo.ID,
 		},
 	}
+
 	if err := u.googleusercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			if _, err := u.googleusercollection.InsertOne(u.ctx, userInfo); err != nil {
-				return err
+				return nil, err
 			}
 		} else {
-			return err
+			return nil, err
 		}
 	}
 
-	session.Options(sessions.Options{
-		HttpOnly: true,
-		Secure:   true,
-		MaxAge:   int(30 * time.Minute),
-	})
-	session.Set("google_user", userInfo.ID)
 	signature := utils.CreateSignature(userInfo.ID, os.Getenv("SECRET_KEY"))
 	combinedValue := utils.CombineSessionDataAndSignature(userInfo.ID, signature)
-	session.Set("session_cookie", combinedValue)
 
-	session.Save()
+	return combinedValue, nil
+}
+
+func (u *UserServiceImpl) GoogleSignOut() error {
 	return nil
 }
 
-func (u *UserServiceImpl) GoogleSignOut(session sessions.Session) error {
-	user := session.Get("google_user")
-	if user == nil {
-		return errors.New("LOGOUT_ERROR: Invalid session token")
-	}
-	session.Delete("google_user")
-	session.Options(sessions.Options{MaxAge: -1})
-	if err := session.Save(); err != nil {
-		return err
-	}
-
+func (u *UserServiceImpl) Test() error {
 	return nil
 }
