@@ -14,6 +14,6 @@ type UserService interface {
 	DeleteUser(*string) error
 	SignIn(sessions.Session, dto.SignInRequest) error
 	SignOut(sessions.Session) error
-	GoogleSignIn() error
-	GoogleSignOut() error
+	GoogleSignIn(sessions.Session, *models.GoogleUser) error
+	GoogleSignOut(sessions.Session) error
 }

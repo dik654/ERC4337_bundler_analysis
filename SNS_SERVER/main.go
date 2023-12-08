@@ -18,15 +18,16 @@ import (
 )
 
 var (
-	server            *gin.Engine
-	googleOauthConfig *oauth2.Config
-	oauthStateString  string
-	userservice       services.UserService
-	usercontroller    controllers.UserController
-	ctx               context.Context
-	usercollection    *mongo.Collection
-	mongoclient       *mongo.Client
-	err               error
+	server               *gin.Engine
+	googleOauthConfig    *oauth2.Config
+	oauthStateString     string
+	userservice          services.UserService
+	usercontroller       controllers.UserController
+	ctx                  context.Context
+	usercollection       *mongo.Collection
+	googleusercollection *mongo.Collection
+	mongoclient          *mongo.Client
+	err                  error
 )
 
 func init() {
@@ -61,7 +62,8 @@ func init() {
 	fmt.Println("mongo connection established")
 
 	usercollection = mongoclient.Database("userdb").Collection("users")
-	userservice = services.NewUserService(usercollection, ctx)
+	googleusercollection = mongoclient.Database("userdb").Collection("google_users")
+	userservice = services.NewUserService(usercollection, googleusercollection, ctx)
 	usercontroller = controllers.New(userservice, googleOauthConfig, oauthStateString)
 	server = gin.Default()
 	server.ForwardedByClientIP = true

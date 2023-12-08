@@ -15,14 +15,16 @@ import (
 )
 
 type UserServiceImpl struct {
-	usercollection *mongo.Collection
-	ctx            context.Context
+	usercollection       *mongo.Collection
+	googleusercollection *mongo.Collection
+	ctx                  context.Context
 }
 
-func NewUserService(usercollection *mongo.Collection, ctx context.Context) UserService {
+func NewUserService(usercollection *mongo.Collection, googleusercollection *mongo.Collection, ctx context.Context) UserService {
 	return &UserServiceImpl{
-		usercollection: usercollection,
-		ctx:            ctx,
+		usercollection:       usercollection,
+		googleusercollection: googleusercollection,
+		ctx:                  ctx,
 	}
 }
 
@@ -120,7 +122,7 @@ func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInR
 		Secure:   true,
 		MaxAge:   int(30 * time.Minute),
 	})
-	session.Set("user", signInReq.ID)
+	session.Set("regular_user", signInReq.ID)
 	signature := utils.CreateSignature(signInReq.ID, os.Getenv("SECRET_KEY"))
 	combinedValue := utils.CombineSessionDataAndSignature(signInReq.ID, signature)
 	session.Set("session_cookie", combinedValue)
@@ -136,18 +138,55 @@ func (u *UserServiceImpl) SignOut(session sessions.Session) error {
 	}
 	session.Delete("user")
 	session.Options(sessions.Options{MaxAge: -1})
-	err := session.Save()
-	if err != nil {
+	if err := session.Save(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *UserServiceImpl) GoogleSignIn() error {
+func (u *UserServiceImpl) GoogleSignIn(session sessions.Session, userInfo *models.GoogleUser) error {
+	var user *models.GoogleUser
+	query := bson.D{
+		bson.E{
+			Key:   "google_user_id",
+			Value: userInfo.ID,
+		},
+	}
+	if err := u.googleusercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			if _, err := u.googleusercollection.InsertOne(u.ctx, userInfo); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	session.Options(sessions.Options{
+		HttpOnly: true,
+		Secure:   true,
+		MaxAge:   int(30 * time.Minute),
+	})
+	session.Set("google_user", userInfo.ID)
+	signature := utils.CreateSignature(userInfo.ID, os.Getenv("SECRET_KEY"))
+	combinedValue := utils.CombineSessionDataAndSignature(userInfo.ID, signature)
+	session.Set("session_cookie", combinedValue)
+
+	session.Save()
 	return nil
 }
 
-func (u *UserServiceImpl) GoogleSignOut() error {
+func (u *UserServiceImpl) GoogleSignOut(session sessions.Session) error {
+	user := session.Get("google_user")
+	if user == nil {
+		return errors.New("LOGOUT_ERROR: Invalid session token")
+	}
+	session.Delete("google_user")
+	session.Options(sessions.Options{MaxAge: -1})
+	if err := session.Save(); err != nil {
+		return err
+	}
+
 	return nil
 }

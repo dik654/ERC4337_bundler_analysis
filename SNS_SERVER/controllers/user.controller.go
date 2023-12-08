@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -97,11 +96,6 @@ func (uc *UserController) SignIn(ctx *gin.Context) {
 
 func (uc *UserController) SignOut(ctx *gin.Context) {
 	session := sessions.Default(ctx)
-	var signInReq dto.SignInRequest
-	if err := ctx.ShouldBindJSON(&signInReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 	if err := uc.UserService.SignOut(session); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
@@ -115,6 +109,7 @@ func (uc *UserController) GoogleSignIn(ctx *gin.Context) {
 }
 
 func (uc *UserController) GoogleSignInCallback(ctx *gin.Context) {
+	session := sessions.Default(ctx)
 	// 인증 코드 가져오기
 	code := ctx.Query("code")
 
@@ -127,28 +122,33 @@ func (uc *UserController) GoogleSignInCallback(ctx *gin.Context) {
 
 	// 액세스 토큰을 사용하여 사용자 정보 가져오기
 	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	var googleUserInfo models.GoogleUser
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	defer response.Body.Close()
 
-	userInfo := struct {
-		Email   string `json:"email"`
-		Name    string `json:"name"`
-		Picture string `json:"picture"`
-	}{}
-	err = json.NewDecoder(response.Body).Decode(&userInfo)
+	err = json.NewDecoder(response.Body).Decode(&googleUserInfo)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fmt.Fprintf(ctx.Writer, "UserInfo: %s\n", userInfo)
+	if err := uc.UserService.GoogleSignIn(session, &googleUserInfo); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (uc *UserController) GoogleSignOut(ctx *gin.Context) {
-
+	session := sessions.Default(ctx)
+	if err := uc.UserService.GoogleSignOut(session); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
@@ -166,6 +166,7 @@ func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
 	loginroute.POST("/signout", uc.SignOut)
 	loginroute.GET("/glogin", uc.GoogleSignIn)
 	loginroute.GET("/glogincallback", uc.GoogleSignInCallback)
+	loginroute.GET("/glogout", uc.GoogleSignOut)
 	// privateroute := rg.Group("/private")
 	// privateroute.Use(middleware.EnsureLoggedIn())
 }

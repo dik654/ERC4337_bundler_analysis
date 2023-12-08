@@ -14,8 +14,9 @@ import (
 func EnsureLoggedIn() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		session := sessions.Default(ctx)
-		sessionID := session.Get("user")
-		if sessionID == nil || !validateCookieSignature(ctx, os.Getenv("SECRET_KEY")) {
+		googleSessionID := session.Get("google_user")
+		regularSessionID := session.Get("regular_user")
+		if (googleSessionID == nil && regularSessionID == nil) || !validateCookieSignature(ctx, os.Getenv("SECRET_KEY")) {
 			ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "unauthorized"})
 			return
 		}
