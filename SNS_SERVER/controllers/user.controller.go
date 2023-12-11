@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
@@ -13,6 +14,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -82,26 +84,36 @@ func (uc *UserController) DeleteUser(ctx *gin.Context) {
 }
 
 func (uc *UserController) SignIn(ctx *gin.Context) {
-	session := sessions.Default(ctx)
 	var signInReq dto.SignInRequest
 	if err := ctx.ShouldBindJSON(&signInReq); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user := session.Get("regular_user_session")
-	if user != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": errors.New("LOGIN_ERROR: already_login")})
+	user, err := ctx.Cookie("regular_user_session")
+	if err != nil {
+		if user == "" {
+			uuid := uuid.NewString()
+			ctx.SetCookie("regular_user_session", uuid, int(30*time.Minute), "/", "localhost", false, true)
+			if err := uc.UserService.SignIn(uuid, signInReq); err != nil {
+				ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+				return
+			}
+			ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+		} else {
+			ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+			return
+		}
 	}
-	if err := uc.UserService.SignIn(session, signInReq); err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (uc *UserController) SignOut(ctx *gin.Context) {
-	session := sessions.Default(ctx)
-	if err := uc.UserService.SignOut(session); err != nil {
+	uuid, err := ctx.Cookie("regular_user_session")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": errors.New("LOGIN_ERROR: " + err.Error())})
+		return
+	}
+	ctx.SetCookie("regular_user_session", uuid, -1, "/", "localhost", false, true)
+	if err := uc.UserService.SignOut(uuid); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
@@ -114,7 +126,6 @@ func (uc *UserController) GoogleSignIn(ctx *gin.Context) {
 }
 
 func (uc *UserController) GoogleSignInCallback(ctx *gin.Context) {
-	session := sessions.Default(ctx)
 	// 인증 코드 가져오기
 	code := ctx.Query("code")
 
@@ -140,16 +151,31 @@ func (uc *UserController) GoogleSignInCallback(ctx *gin.Context) {
 		return
 	}
 
-	if err := uc.UserService.GoogleSignIn(session, &googleUserInfo); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	user, err := ctx.Cookie("google_user_session")
+	if err != nil {
+		if user == "" {
+			uuid := uuid.NewString()
+			ctx.SetCookie("google_user_session", uuid, int(30*time.Minute), "/", "localhost", false, true)
+			if err := uc.UserService.GoogleSignIn(uuid, &googleUserInfo); err != nil {
+				ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+				return
+			}
+			ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+		} else {
+			ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+			return
+		}
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (uc *UserController) GoogleSignOut(ctx *gin.Context) {
-	session := sessions.Default(ctx)
-	if err := uc.UserService.GoogleSignOut(session); err != nil {
+	uuid, err := ctx.Cookie("google_user_session")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": errors.New("GOOGLE_LOGOUT_ERROR: " + err.Error())})
+		return
+	}
+	ctx.SetCookie("google_user_session", uuid, -1, "/", "localhost", false, true)
+	if err := uc.UserService.GoogleSignOut(uuid); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}

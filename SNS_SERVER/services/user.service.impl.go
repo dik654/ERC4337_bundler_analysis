@@ -9,8 +9,6 @@ import (
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
 	"github.com/dik654/Go_projects/SNS_SERVER/models"
 	"github.com/dik654/Go_projects/SNS_SERVER/utils"
-	"github.com/gin-contrib/sessions"
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -108,7 +106,7 @@ func (u *UserServiceImpl) DeleteUser(name *string) error {
 	return nil
 }
 
-func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInRequest) error {
+func (u *UserServiceImpl) SignIn(uuid string, signInReq dto.SignInRequest) error {
 	var user *dto.SignInRequest
 	query := bson.D{
 		{Key: "user_id", Value: signInReq.ID},
@@ -122,16 +120,8 @@ func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInR
 	}
 
 	ctx := context.Background()
-	uuid := uuid.NewString()
 	signature := utils.CreateSignature(uuid, os.Getenv("SECRET_KEY"))
 	combinedValue := utils.CombineSessionDataAndSignature(uuid, signature)
-	session.Options(sessions.Options{
-		HttpOnly: true,
-		Secure:   true,
-		MaxAge:   int(30 * time.Minute),
-	})
-	session.Set("regular_user_session", combinedValue)
-	session.Save()
 	if cmd := u.redisclient.Set(ctx, "regular_user_session:"+uuid, combinedValue, 30*time.Minute); cmd.Err() != nil {
 		return errors.New("LOGIN_ERROR: " + cmd.Err().Error())
 	}
@@ -139,26 +129,14 @@ func (u *UserServiceImpl) SignIn(session sessions.Session, signInReq dto.SignInR
 	return nil
 }
 
-func (u *UserServiceImpl) SignOut(session sessions.Session) error {
+func (u *UserServiceImpl) SignOut(uuid string) error {
 	ctx := context.Background()
-	sessionValue := session.Get("regular_user_session")
-	sessionString, ok := sessionValue.([]byte)
-	if !ok {
-		return errors.New("LOGOUT_ERROR: session value is not []byte")
-	}
-	sessionID, _, _ := utils.SeparateSessionDataAndSignature(sessionString)
-	if sessionID == "" {
-		return errors.New("LOGOUT_ERROR: Invalid session token")
-	}
-	u.redisclient.Del(ctx, "regular_user_session:"+sessionID)
-	session.Delete("regular_user_session")
-	session.Options(sessions.Options{MaxAge: -1})
-	session.Save()
+	u.redisclient.Del(ctx, "regular_user_session:"+uuid)
 
 	return nil
 }
 
-func (u *UserServiceImpl) GoogleSignIn(session sessions.Session, userInfo *models.GoogleUser) error {
+func (u *UserServiceImpl) GoogleSignIn(uuid string, userInfo *models.GoogleUser) error {
 	var user *models.GoogleUser
 	query := bson.D{
 		bson.E{
@@ -176,38 +154,18 @@ func (u *UserServiceImpl) GoogleSignIn(session sessions.Session, userInfo *model
 		}
 	}
 
-	session.Options(sessions.Options{
-		HttpOnly: true,
-		Secure:   true,
-		MaxAge:   int(30 * time.Minute),
-	})
 	ctx := context.Background()
-	uuid := uuid.NewString()
 	signature := utils.CreateSignature(uuid, os.Getenv("SECRET_KEY"))
 	combinedValue := utils.CombineSessionDataAndSignature(uuid, signature)
-	session.Set("google_user_session", combinedValue)
 	if cmd := u.redisclient.Set(ctx, "google_user_session:"+uuid, combinedValue, 30*time.Minute); cmd.Err() != nil {
-		return errors.New("LOGIN_ERROR: " + cmd.Err().Error())
+		return errors.New("GOOGLE_LOGIN_ERROR: " + cmd.Err().Error())
 	}
 
-	session.Save()
 	return nil
 }
 
-func (u *UserServiceImpl) GoogleSignOut(session sessions.Session) error {
+func (u *UserServiceImpl) GoogleSignOut(uuid string) error {
 	ctx := context.Background()
-	sessionValue := session.Get("google_user_session")
-	sessionString, ok := sessionValue.([]byte)
-	if !ok {
-		return errors.New("GOOGLE_LOGOUT_ERROR: session value is not []byte")
-	}
-	sessionID, _, _ := utils.SeparateSessionDataAndSignature(sessionString)
-	if sessionID == "" {
-		return errors.New("GOOGLE_LOGOUT_ERROR: Invalid session token")
-	}
-	u.redisclient.Del(ctx, "google_user_session:"+sessionID)
-	session.Delete("google_user_session")
-	session.Options(sessions.Options{MaxAge: -1})
-	session.Save()
+	u.redisclient.Del(ctx, "google_user_session:"+uuid)
 	return nil
 }
