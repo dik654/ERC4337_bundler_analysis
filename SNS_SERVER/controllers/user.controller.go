@@ -25,7 +25,7 @@ type UserController struct {
 	ctx               context.Context
 }
 
-func New(userservice services.UserService, googleOauthConfig *oauth2.Config, oauthStateString string) UserController {
+func NewUserController(userservice services.UserService, googleOauthConfig *oauth2.Config, oauthStateString string) UserController {
 	return UserController{
 		UserService:       userservice,
 		googleOauthConfig: googleOauthConfig,

@@ -22,11 +22,14 @@ var (
 	server               *gin.Engine
 	googleOauthConfig    *oauth2.Config
 	oauthStateString     string
-	userservice          services.UserService
-	usercontroller       controllers.UserController
+	serviceInstances     services.Services
+	controllerInstances  controllers.Controllers
 	ctx                  context.Context
 	usercollection       *mongo.Collection
 	googleusercollection *mongo.Collection
+	postcollection       *mongo.Collection
+	commentcollection    *mongo.Collection
+	likecollection       *mongo.Collection
 	mongoclient          *mongo.Client
 	redisclient          *redis.Client
 	err                  error
@@ -39,8 +42,8 @@ func init() {
 
 	redisclient := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: "",
+		DB:       0,
 	})
 
 	googleOauthConfig = &oauth2.Config{
@@ -71,8 +74,11 @@ func init() {
 
 	usercollection = mongoclient.Database("userdb").Collection("users")
 	googleusercollection = mongoclient.Database("userdb").Collection("google_users")
-	userservice = services.NewUserService(redisclient, usercollection, googleusercollection, ctx)
-	usercontroller = controllers.New(userservice, googleOauthConfig, oauthStateString)
+	serviceInstances = services.New(redisclient, usercollection, googleusercollection, postcollection, commentcollection, likecollection, ctx)
+	controllerInstances = controllers.New(
+		serviceInstances,
+		googleOauthConfig,
+		oauthStateString)
 	server = gin.Default()
 	server.ForwardedByClientIP = true
 	server.SetTrustedProxies([]string{
@@ -84,7 +90,7 @@ func main() {
 	defer mongoclient.Disconnect(ctx)
 
 	basepath := server.Group("/v1")
-	usercontroller.RegisterUserRoutes(basepath)
+	controllers.RegisterRoutes(controllerInstances, basepath)
 
 	// production 환경에서는 RunTLS로 https 통신을 사용해야함 (쿠키보안 등)
 	log.Fatal(server.Run(":9090"))
