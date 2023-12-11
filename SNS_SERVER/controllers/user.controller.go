@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 
@@ -86,6 +87,10 @@ func (uc *UserController) SignIn(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&signInReq); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	user := session.Get("regular_user_session")
+	if user != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": errors.New("LOGIN_ERROR: already_login")})
 	}
 	if err := uc.UserService.SignIn(session, signInReq); err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})

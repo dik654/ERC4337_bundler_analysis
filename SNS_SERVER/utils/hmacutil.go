@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 )
 
 func CombineSessionDataAndSignature(sessionData string, signature string) []byte {
@@ -11,6 +13,17 @@ func CombineSessionDataAndSignature(sessionData string, signature string) []byte
 	combined := append([]byte(sessionData), separator...)
 	combined = append(combined, []byte(signature)...)
 	return combined
+}
+
+func SeparateSessionDataAndSignature(combined []byte) (string, string, error) {
+	separator := []byte("|")
+	parts := bytes.SplitN(combined, separator, 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid combined data format")
+	}
+	data := string(parts[0])
+	signature := string(parts[1])
+	return data, signature, nil
 }
 
 func CreateSignature(value string, secretKey string) string {

@@ -10,6 +10,7 @@ import (
 	"github.com/dik654/Go_projects/SNS_SERVER/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -27,6 +28,7 @@ var (
 	usercollection       *mongo.Collection
 	googleusercollection *mongo.Collection
 	mongoclient          *mongo.Client
+	redisclient          *redis.Client
 	err                  error
 )
 
@@ -34,6 +36,12 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)
 	}
+
+	redisclient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
 
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:9090/v1/login/glogincallback",
@@ -63,7 +71,7 @@ func init() {
 
 	usercollection = mongoclient.Database("userdb").Collection("users")
 	googleusercollection = mongoclient.Database("userdb").Collection("google_users")
-	userservice = services.NewUserService(usercollection, googleusercollection, ctx)
+	userservice = services.NewUserService(redisclient, usercollection, googleusercollection, ctx)
 	usercontroller = controllers.New(userservice, googleOauthConfig, oauthStateString)
 	server = gin.Default()
 	server.ForwardedByClientIP = true
