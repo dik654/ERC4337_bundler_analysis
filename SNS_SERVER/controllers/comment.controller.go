@@ -27,6 +27,10 @@ func (cc *CommentController) GetComments(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
+func (cc *CommentController) GetUserComments(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+}
+
 func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }

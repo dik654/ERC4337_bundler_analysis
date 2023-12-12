@@ -14,6 +14,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -39,6 +40,9 @@ var (
 )
 
 func init() {
+	//
+	// ENV bootstrap
+	//
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)
 	}
@@ -48,6 +52,10 @@ func init() {
 		Password: "",
 		DB:       0,
 	})
+
+	//
+	// GOOGLE_AUTH bootstrap
+	//
 
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:9090/v1/login/glogincallback",
@@ -60,6 +68,10 @@ func init() {
 		Endpoint: google.Endpoint,
 	}
 	oauthStateString = os.Getenv("SECRET_KEY")
+
+	//
+	// MONGO_DB_CLIENT bootstrap
+	//
 
 	ctx = context.Background()
 
@@ -75,8 +87,30 @@ func init() {
 
 	fmt.Println("mongo connection established")
 
+	//
+	// MONGO_DB_COLLECTION bootstrap
+	//
+
 	usercollection = mongoclient.Database("userdb").Collection("users")
+	postcollection = mongoclient.Database("postdb").Collection("posts")
+	postcollection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.M{
+				"title":   "text",
+				"content": "text",
+				"author":  "text",
+			},
+		},
+	)
+	likecollection = mongoclient.Database("likedb").Collection("likes")
+	commentcollection = mongoclient.Database("commentdb").Collection("comments")
 	googleusercollection = mongoclient.Database("userdb").Collection("google_users")
+
+	//
+	// GO_GIN_SERVER bootstrap
+	//
+
 	serviceInstances = services.New(redisclient, usercollection, googleusercollection, postcollection, commentcollection, likecollection, ctx)
 	controllerInstances = controllers.New(
 		serviceInstances,
@@ -89,13 +123,12 @@ func init() {
 	})
 }
 
-//	@title			SNS SERVER
-//	@version		1.0
-//	@description	mini sns server
-//	@termsOfService	http://swagger.io/terms/
-
-//	@host		localhost:9090
-//	@BasePath	/v1
+// @title			SNS SERVER
+// @version		1.0
+// @description	mini sns server
+// @termsOfService	http://swagger.io/terms/
+// @host			localhost:9090
+// @BasePath		/v1
 func main() {
 	defer mongoclient.Disconnect(ctx)
 

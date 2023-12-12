@@ -26,6 +26,10 @@ func (c *CommentServiceImpl) GetComments() error {
 	return nil
 }
 
+func (c *CommentServiceImpl) GetUserComments() error {
+	return nil
+}
+
 func (c *CommentServiceImpl) UpdateComment() error {
 	return nil
 }
