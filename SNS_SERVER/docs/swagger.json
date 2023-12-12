@@ -10,6 +10,139 @@
     "host": "localhost:9090",
     "basePath": "/v1",
     "paths": {
+        "/login/glogin": {
+            "get": {
+                "description": "sign out google user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sign in/out google user"
+                ],
+                "summary": "sign up google user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "Session Cookie"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login/glogout": {
+            "get": {
+                "description": "sign out google user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sign in/out google user"
+                ],
+                "summary": "sign out google user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session Cookie",
+                        "name": "google_user_session",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/login/signin": {
+            "post": {
+                "description": "sign in regular user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sign in/out regular user"
+                ],
+                "summary": "sign in regular user",
+                "parameters": [
+                    {
+                        "description": "regular login data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SignInRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "Session Cookie"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login/signout": {
+            "post": {
+                "description": "sign out regular user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sign in/out regular user"
+                ],
+                "summary": "sign out regular user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session Cookie",
+                        "name": "regular_user_session",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/register/create": {
             "post": {
                 "description": "write user informations to mongodb",
@@ -20,7 +153,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "register"
+                    "register regular user"
                 ],
                 "summary": "sign up regular user",
                 "parameters": [
@@ -43,9 +176,144 @@
                     }
                 }
             }
+        },
+        "/register/delete/{id}": {
+            "delete": {
+                "description": "delete user information in mongodb",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register regular user"
+                ],
+                "summary": "delete regular user data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "regular_user_id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/get/{id}": {
+            "get": {
+                "description": "get regular user informations to mongodb",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register regular user"
+                ],
+                "summary": "get user data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "regular_user_id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/getall": {
+            "get": {
+                "description": "get all regular user informations to mongodb",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register regular user"
+                ],
+                "summary": "get user data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/register/update": {
+            "patch": {
+                "description": "update regular user informations to mongodb",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register regular user"
+                ],
+                "summary": "update regular user data",
+                "parameters": [
+                    {
+                        "description": "User data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.SignInRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Address": {
             "type": "object",
             "properties": {

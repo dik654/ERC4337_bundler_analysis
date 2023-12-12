@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  dto.SignInRequest:
+    properties:
+      id:
+        type: string
+      password:
+        type: string
+    type: object
   models.Address:
     properties:
       city:
@@ -32,6 +39,93 @@ info:
   title: SNS SERVER
   version: "1.0"
 paths:
+  /login/glogin:
+    get:
+      consumes:
+      - application/json
+      description: sign out google user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: Session Cookie
+              type: string
+          schema:
+            type: string
+      summary: sign up google user
+      tags:
+      - sign in/out google user
+  /login/glogout:
+    get:
+      consumes:
+      - application/json
+      description: sign out google user
+      parameters:
+      - description: Session Cookie
+        in: header
+        name: google_user_session
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: sign out google user
+      tags:
+      - sign in/out google user
+  /login/signin:
+    post:
+      consumes:
+      - application/json
+      description: sign in regular user
+      parameters:
+      - description: regular login data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: Session Cookie
+              type: string
+          schema:
+            type: string
+      summary: sign in regular user
+      tags:
+      - sign in/out regular user
+  /login/signout:
+    post:
+      consumes:
+      - application/json
+      description: sign out regular user
+      parameters:
+      - description: Session Cookie
+        in: header
+        name: regular_user_session
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: sign out regular user
+      tags:
+      - sign in/out regular user
   /register/create:
     post:
       consumes:
@@ -53,5 +147,86 @@ paths:
             type: string
       summary: sign up regular user
       tags:
-      - register
+      - register regular user
+  /register/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete user information in mongodb
+      parameters:
+      - description: regular_user_id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: delete regular user data
+      tags:
+      - register regular user
+  /register/get/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get regular user informations to mongodb
+      parameters:
+      - description: regular_user_id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: get user data
+      tags:
+      - register regular user
+  /register/getall:
+    get:
+      consumes:
+      - application/json
+      description: get all regular user informations to mongodb
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      summary: get user data
+      tags:
+      - register regular user
+  /register/update:
+    patch:
+      consumes:
+      - application/json
+      description: update regular user informations to mongodb
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: update regular user data
+      tags:
+      - register regular user
 swagger: "2.0"

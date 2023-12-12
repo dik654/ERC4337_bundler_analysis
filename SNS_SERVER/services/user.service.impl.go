@@ -12,6 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserServiceImpl struct {
@@ -36,10 +37,13 @@ func (u *UserServiceImpl) CreateUser(user *models.User) error {
 	return err
 }
 
-func (u *UserServiceImpl) GetUser(name *string) (*models.User, error) {
+func (u *UserServiceImpl) GetUser(id *string) (*models.User, error) {
 	var user *models.User
-	query := bson.D{bson.E{Key: "user_name", Value: name}}
-	err := u.usercollection.FindOne(u.ctx, query).Decode(&user)
+	query := bson.D{
+		{Key: "user_id", Value: id},
+	}
+	opts := options.FindOne().SetProjection(bson.M{"user_password": 0})
+	err := u.usercollection.FindOne(u.ctx, query, opts).Decode(&user)
 	return user, err
 }
 
@@ -70,35 +74,38 @@ func (u *UserServiceImpl) GetAll() ([]*models.User, error) {
 }
 
 func (u *UserServiceImpl) UpdateUser(user *models.User) error {
-	filter := bson.D{
-		bson.E{
-			Key: "user_name", Value: user.Name,
-		},
+	filter := bson.D{{Key: "user_id", Value: user.ID}}
+
+	updateFields := make(map[string]interface{})
+
+	if user.Name != "" {
+		updateFields["user_name"] = user.Name
 	}
-	update := bson.D{
-		bson.E{
-			Key: "$set", Value: bson.D{
-				bson.E{
-					Key: "user_name", Value: user.Name,
-				},
-				bson.E{
-					Key: "user_age", Value: user.Age,
-				},
-				bson.E{
-					Key: "user_address", Value: user.Address,
-				},
-			},
-		},
+	if user.Age > 0 { // 0이 아닌 경우에만 업데이트
+		updateFields["user_age"] = user.Age
 	}
+	if user.Address != (models.Address{}) { // 빈 Address 구조체가 아닌 경우에만 업데이트
+		updateFields["user_address"] = user.Address
+	}
+	if user.Password != "" {
+		updateFields["user_password"] = utils.HashingPassword(user.Password)
+	}
+
+	var updateData bson.D
+	for k, v := range updateFields {
+		updateData = append(updateData, bson.E{Key: k, Value: v})
+	}
+
+	update := bson.D{{Key: "$set", Value: updateData}}
 	result, _ := u.usercollection.UpdateOne(u.ctx, filter, update)
 	if result.MatchedCount != 1 {
-		return errors.New("UPDATE_USER_ERROR: no matched document found for update")
+		return errors.New("UPDATE_USER_ERROR: multiple ID found for update")
 	}
 	return nil
 }
 
-func (u *UserServiceImpl) DeleteUser(name *string) error {
-	filter := bson.D{bson.E{Key: "user_name", Value: name}}
+func (u *UserServiceImpl) DeleteUser(id *string) error {
+	filter := bson.D{bson.E{Key: "user_id", Value: id}}
 	result, _ := u.usercollection.DeleteOne(u.ctx, filter)
 	if result.DeletedCount != 1 {
 		return errors.New("DELETE_USER_ERROR: no matched document found for delete")
