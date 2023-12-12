@@ -7,10 +7,13 @@ import (
 	"os"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers"
+	docs "github.com/dik654/Go_projects/SNS_SERVER/docs"
 	"github.com/dik654/Go_projects/SNS_SERVER/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -86,10 +89,20 @@ func init() {
 	})
 }
 
+//	@title			SNS SERVER
+//	@version		1.0
+//	@description	mini sns server
+//	@termsOfService	http://swagger.io/terms/
+
+//	@host		localhost:9090
+//	@BasePath	/v1
 func main() {
 	defer mongoclient.Disconnect(ctx)
 
+	docs.SwaggerInfo.BasePath = "/v1"
 	basepath := server.Group("/v1")
+	basepath.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
 	controllers.RegisterRoutes(controllerInstances, basepath)
 
 	// production 환경에서는 RunTLS로 https 통신을 사용해야함 (쿠키보안 등)

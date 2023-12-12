@@ -33,6 +33,16 @@ func NewUserController(userservice services.UserService, googleOauthConfig *oaut
 	}
 }
 
+// RegisterUser godoc
+//
+//	@Summary	sign up regular user
+//	@Tags			register
+//	@Description	write user informations to mongodb
+//	@Accept			json
+//	@Produce		json
+//	@Param user body models.User true "User Data"
+//	@Success	200	{string}	success
+//	@Router		/register/create [post]
 func (uc *UserController) CreateUser(ctx *gin.Context) {
 	var user models.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -48,8 +58,12 @@ func (uc *UserController) CreateUser(ctx *gin.Context) {
 
 func (uc *UserController) GetUser(ctx *gin.Context) {
 	username := ctx.Param("name")
-	uc.UserService.GetUser(&username)
-	ctx.JSON(200, "")
+	user, err := uc.UserService.GetUser(&username)
+	if err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, user)
 }
 
 func (uc *UserController) GetAll(ctx *gin.Context) {

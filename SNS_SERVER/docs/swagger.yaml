@@ -1,0 +1,57 @@
+basePath: /v1
+definitions:
+  models.Address:
+    properties:
+      city:
+        type: string
+      pincode:
+        type: integer
+      state:
+        type: string
+    type: object
+  models.User:
+    properties:
+      address:
+        $ref: '#/definitions/models.Address'
+      age:
+        type: integer
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:9090
+info:
+  contact: {}
+  description: mini sns server
+  termsOfService: http://swagger.io/terms/
+  title: SNS SERVER
+  version: "1.0"
+paths:
+  /register/create:
+    post:
+      consumes:
+      - application/json
+      description: write user informations to mongodb
+      parameters:
+      - description: User Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: sign up regular user
+      tags:
+      - register
+swagger: "2.0"
