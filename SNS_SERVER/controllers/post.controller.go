@@ -22,20 +22,37 @@ func NewPostController(postservice services.PostService) PostController {
 }
 
 func (pc *PostController) CreatePost(ctx *gin.Context) {
-	var post models.Post
+	sessionInfo, err := GetSessionInfo(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	var post dto.CreatePostRequest
 	if err := ctx.ShouldBindJSON(&post); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	if err := pc.PostService.CreatePost(&post); err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+	if err := pc.PostService.CreatePost(&post, sessionInfo); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (pc *PostController) GetAllPosts(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+	var paginationRequest dto.PaginationRequest
+	if err := ctx.ShouldBindJSON(&paginationRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	posts, err := pc.PostService.GetAllPosts(&paginationRequest)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, posts)
 }
 
 func (pc *PostController) GetPosts(ctx *gin.Context) {
@@ -46,21 +63,53 @@ func (pc *PostController) GetPosts(ctx *gin.Context) {
 	}
 	posts, err := pc.PostService.GetPosts(&getPostRequest)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, posts)
 }
 
-func (pc *PostController) GetUserPosts(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
-}
-
 func (pc *PostController) UpdatePost(ctx *gin.Context) {
+	sessionInfo, err := GetSessionInfo(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	postID := ctx.Param("post_id")
+	if canEdit, err := pc.PostService.CanEditPost(sessionInfo, postID); canEdit != true || err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	var post models.Post
+	if err := ctx.ShouldBindJSON(&post); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	post.ID = postID
+	if err := pc.PostService.UpdatePost(post); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (pc *PostController) DeletePost(ctx *gin.Context) {
+	sessionInfo, err := GetSessionInfo(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	postID := ctx.Param("post_id")
+	if canEdit, err := pc.PostService.CanEditPost(sessionInfo, postID); canEdit != true || err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := pc.PostService.DeletePost(postID); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
@@ -69,7 +118,6 @@ func (pc *PostController) RegisterPostRoutes(rg *gin.RouterGroup) {
 	postroute.POST("/create", pc.CreatePost)
 	postroute.GET("/getall", pc.GetAllPosts)
 	postroute.GET("/get", pc.GetPosts)
-	postroute.GET("/get/:id", pc.GetUserPosts)
-	postroute.PATCH("/update", pc.UpdatePost)
-	postroute.DELETE("/delete", pc.DeletePost)
+	postroute.PATCH("/update/:post_id", pc.UpdatePost)
+	postroute.DELETE("/delete/:post_id", pc.DeletePost)
 }

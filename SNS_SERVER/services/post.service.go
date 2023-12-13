@@ -6,10 +6,10 @@ import (
 )
 
 type PostService interface {
-	CreatePost(*models.Post) error
-	GetAllPosts() error
+	CreatePost(*dto.CreatePostRequest, *dto.SessionInfo) error
+	GetAllPosts(*dto.PaginationRequest) ([]models.Post, error)
 	GetPosts(*dto.GetPostRequest) ([]models.Post, error)
-	GetUserPosts() error
-	UpdatePost() error
-	DeletePost() error
+	CanEditPost(*dto.SessionInfo, string) (bool, error)
+	UpdatePost(models.Post) error
+	DeletePost(string) error
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"time"
@@ -127,8 +128,16 @@ func (u *UserServiceImpl) SignIn(uuid string, signInReq dto.SignInRequest) error
 	}
 
 	ctx := context.Background()
-	signature := utils.CreateSignature(uuid, os.Getenv("SECRET_KEY"))
-	combinedValue := utils.CombineSessionDataAndSignature(uuid, signature)
+	sessionData := map[string]string{
+		"user_id": signInReq.ID,
+		"uuid":    uuid,
+	}
+	sessionDataJSON, err := json.Marshal(sessionData)
+	if err != nil {
+		return errors.New("LOGIN_ERROR: " + err.Error())
+	}
+	signature := utils.CreateSignature(sessionDataJSON, os.Getenv("SECRET_KEY"))
+	combinedValue := utils.CombineSessionDataAndSignature(sessionDataJSON, signature)
 	if cmd := u.redisclient.Set(ctx, "regular_user_session:"+uuid, combinedValue, 30*time.Minute); cmd.Err() != nil {
 		return errors.New("LOGIN_ERROR: " + cmd.Err().Error())
 	}
@@ -162,8 +171,8 @@ func (u *UserServiceImpl) GoogleSignIn(uuid string, userInfo *models.GoogleUser)
 	}
 
 	ctx := context.Background()
-	signature := utils.CreateSignature(uuid, os.Getenv("SECRET_KEY"))
-	combinedValue := utils.CombineSessionDataAndSignature(uuid, signature)
+	signature := utils.CreateSignature([]byte(uuid), os.Getenv("SECRET_KEY"))
+	combinedValue := utils.CombineSessionDataAndSignature([]byte(uuid), signature)
 	if cmd := u.redisclient.Set(ctx, "google_user_session:"+uuid, combinedValue, 30*time.Minute); cmd.Err() != nil {
 		return errors.New("GOOGLE_LOGIN_ERROR: " + cmd.Err().Error())
 	}

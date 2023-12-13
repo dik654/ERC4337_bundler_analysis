@@ -16,9 +16,9 @@ type Services struct {
 
 func New(redisclient *redis.Client, usercollection *mongo.Collection, googleusercollection *mongo.Collection, postcollection *mongo.Collection, commentcollection *mongo.Collection, likecollection *mongo.Collection, ctx context.Context) Services {
 	userService := NewUserService(redisclient, usercollection, googleusercollection, ctx)
-	postService := NewPostService(postcollection, ctx)
-	commentService := NewCommentService(commentcollection, ctx)
-	likeService := NewLikeService(likecollection, ctx)
+	postService := NewPostService(redisclient, postcollection, ctx)
+	commentService := NewCommentService(redisclient, commentcollection, ctx)
+	likeService := NewLikeService(redisclient, likecollection, ctx)
 	return Services{
 		userService,
 		postService,

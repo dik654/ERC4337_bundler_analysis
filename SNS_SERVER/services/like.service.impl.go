@@ -3,16 +3,19 @@ package services
 import (
 	"context"
 
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type LikeServiceImpl struct {
+	redisclient    *redis.Client
 	likecollection *mongo.Collection
 	ctx            context.Context
 }
 
-func NewLikeService(likecollection *mongo.Collection, ctx context.Context) LikeService {
+func NewLikeService(redisclient *redis.Client, likecollection *mongo.Collection, ctx context.Context) LikeService {
 	return &LikeServiceImpl{
+		redisclient:    redisclient,
 		likecollection: likecollection,
 		ctx:            ctx,
 	}

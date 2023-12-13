@@ -15,18 +15,21 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/oauth2"
 )
 
 type UserController struct {
+	redisClient       *redis.Client
 	UserService       services.UserService
 	googleOauthConfig *oauth2.Config
 	oauthStateString  string
 	ctx               context.Context
 }
 
-func NewUserController(userservice services.UserService, googleOauthConfig *oauth2.Config, oauthStateString string) UserController {
+func NewUserController(redisclient *redis.Client, userservice services.UserService, googleOauthConfig *oauth2.Config, oauthStateString string) UserController {
 	return UserController{
+		redisClient:       redisclient,
 		UserService:       userservice,
 		googleOauthConfig: googleOauthConfig,
 		oauthStateString:  oauthStateString,
@@ -163,11 +166,20 @@ func (uc *UserController) SignIn(ctx *gin.Context) {
 				return
 			}
 			ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+			return
 		} else {
 			ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 			return
 		}
+	} else {
+		_, err = uc.redisClient.Get(ctx, "regular_user_session:"+user).Result()
+		if err != nil {
+			ctx.SetCookie("regular_user_session", user, -1, "/", "localhost", false, true)
+			ctx.JSON(http.StatusBadGateway, gin.H{"message": "세션이 만료되었습니다. " + err.Error()})
+			return
+		}
 	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 // SignOut godoc
@@ -248,6 +260,12 @@ func (uc *UserController) GoogleSignInCallback(ctx *gin.Context) {
 		} else {
 			ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 			return
+		}
+	} else {
+		_, err = uc.redisClient.Get(ctx, "google_user_session:"+user).Result()
+		if err != nil {
+			ctx.SetCookie("google_user_session", user, -1, "/", "localhost", false, true)
+			ctx.JSON(http.StatusBadGateway, gin.H{"message": "세션이 만료되었습니다. " + err.Error()})
 		}
 	}
 }

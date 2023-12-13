@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-func CombineSessionDataAndSignature(sessionData string, signature string) []byte {
+func CombineSessionDataAndSignature(sessionData []byte, signature string) []byte {
 	separator := []byte("|")
-	combined := append([]byte(sessionData), separator...)
+	combined := append(sessionData, separator...)
 	combined = append(combined, []byte(signature)...)
 	return combined
 }
@@ -26,8 +26,8 @@ func SeparateSessionDataAndSignature(combined []byte) (string, string, error) {
 	return data, signature, nil
 }
 
-func CreateSignature(value string, secretKey string) string {
+func CreateSignature(value []byte, secretKey string) string {
 	hmac := hmac.New(sha256.New, []byte(secretKey))
-	hmac.Write([]byte(value))
+	hmac.Write(value)
 	return hex.EncodeToString(hmac.Sum(nil))
 }

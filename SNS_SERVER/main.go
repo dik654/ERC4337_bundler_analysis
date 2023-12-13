@@ -113,6 +113,7 @@ func init() {
 
 	serviceInstances = services.New(redisclient, usercollection, googleusercollection, postcollection, commentcollection, likecollection, ctx)
 	controllerInstances = controllers.New(
+		redisclient,
 		serviceInstances,
 		googleOauthConfig,
 		oauthStateString)
