@@ -160,11 +160,11 @@ func (uc *UserController) SignIn(ctx *gin.Context) {
 	if err != nil {
 		if user == "" {
 			uuid := uuid.NewString()
-			ctx.SetCookie("regular_user_session", uuid, int(30*time.Minute), "/", "localhost", false, true)
 			if err := uc.UserService.SignIn(uuid, signInReq); err != nil {
 				ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 				return
 			}
+			ctx.SetCookie("regular_user_session", uuid, int(30*time.Minute), "/", "localhost", false, true)
 			ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 			return
 		} else {
@@ -174,7 +174,7 @@ func (uc *UserController) SignIn(ctx *gin.Context) {
 	} else {
 		_, err = uc.redisClient.Get(ctx, "regular_user_session:"+user).Result()
 		if err != nil {
-			ctx.SetCookie("regular_user_session", user, -1, "/", "localhost", false, true)
+			ctx.SetCookie("regular_user_session", "regular_user_session"+user, -1, "/", "localhost", false, true)
 			ctx.JSON(http.StatusBadGateway, gin.H{"message": "세션이 만료되었습니다. " + err.Error()})
 			return
 		}

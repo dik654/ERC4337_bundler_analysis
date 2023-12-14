@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -115,7 +116,7 @@ func (u *UserServiceImpl) DeleteUser(id *string) error {
 }
 
 func (u *UserServiceImpl) SignIn(uuid string, signInReq dto.SignInRequest) error {
-	var user *dto.SignInRequest
+	var user models.User
 	query := bson.D{
 		{Key: "user_id", Value: signInReq.ID},
 	}
@@ -123,6 +124,7 @@ func (u *UserServiceImpl) SignIn(uuid string, signInReq dto.SignInRequest) error
 		return err
 	}
 	requestHashedPassword := utils.HashingPassword(signInReq.Password)
+	fmt.Println(user)
 	if user.Password != requestHashedPassword {
 		return errors.New("LOGIN_ERROR: invalid password")
 	}

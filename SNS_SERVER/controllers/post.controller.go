@@ -113,6 +113,33 @@ func (pc *PostController) DeletePost(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
+func (pc *PostController) LikePost(ctx *gin.Context) {
+	var postLikeRequest dto.PostLikeRequest
+	if err := ctx.ShouldBindJSON(&postLikeRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := pc.PostService.LikePost(&postLikeRequest); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+}
+
+func (pc *PostController) JudgePost(ctx *gin.Context) {
+	var postJudgeRequest models.Judge
+	if err := ctx.ShouldBindJSON(&postJudgeRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := pc.PostService.JudgePost(postJudgeRequest); err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
+}
+
 func (pc *PostController) RegisterPostRoutes(rg *gin.RouterGroup) {
 	postroute := rg.Group("/post")
 	postroute.POST("/create", pc.CreatePost)
@@ -120,4 +147,6 @@ func (pc *PostController) RegisterPostRoutes(rg *gin.RouterGroup) {
 	postroute.GET("/get", pc.GetPosts)
 	postroute.PATCH("/update/:post_id", pc.UpdatePost)
 	postroute.DELETE("/delete/:post_id", pc.DeletePost)
+	postroute.POST("/like", pc.LikePost)
+	postroute.POST("/judge", pc.JudgePost)
 }

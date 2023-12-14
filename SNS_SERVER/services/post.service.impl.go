@@ -17,13 +17,15 @@ import (
 )
 
 type PostServiceImpl struct {
+	commentservice CommentService
 	redisclient    *redis.Client
 	postcollection *mongo.Collection
 	ctx            context.Context
 }
 
-func NewPostService(redisclient *redis.Client, postcollection *mongo.Collection, ctx context.Context) PostService {
+func NewPostService(commentservice CommentService, redisclient *redis.Client, postcollection *mongo.Collection, ctx context.Context) PostService {
 	return &PostServiceImpl{
+		commentservice: commentservice,
 		redisclient:    redisclient,
 		postcollection: postcollection,
 		ctx:            ctx,
@@ -137,9 +139,69 @@ func (p *PostServiceImpl) DeletePost(postId string) error {
 	if result.DeletedCount != 1 {
 		return errors.New("DELETE_USER_ERROR: no matched document found for delete")
 	}
+	if err := p.commentservice.DeleteComments(postId); err != nil {
+		return err
+	}
 	return nil
 }
 
+func (p *PostServiceImpl) LikePost(postLikeRequest *dto.PostLikeRequest) error {
+	filter := bson.M{"post_id": postLikeRequest.PostID}
+
+	var update bson.M
+	if postLikeRequest.Like {
+		// 좋아요 수 증가
+		update = bson.M{
+			"$inc": bson.M{
+				"post_like": 1,
+			},
+		}
+	} else {
+		// 싫어요 수 증가
+		update = bson.M{
+			"$inc": bson.M{
+				"post_unlike": 1,
+			},
+		}
+	}
+
+	// MongoDB에 업데이트 요청
+	result, err := p.postcollection.UpdateOne(p.ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount != 1 {
+		return errors.New("UPDATE_POST_ERROR: no matched document found for update")
+	}
+
+	return nil
+}
+
+func (p *PostServiceImpl) JudgePost(postJudgeRequest models.Judge) error {
+	ctx := context.Background()
+
+	filter := bson.M{"post_id": postJudgeRequest.PostID}
+
+	update := bson.M{
+		"$push": bson.M{
+			"post_judges": postJudgeRequest,
+		},
+	}
+
+	result, err := p.postcollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount != 1 {
+		return errors.New("UPDATE_POST_ERROR: no matched document found for update")
+	}
+
+	return nil
+}
+
+// 중복되는 메서드는 common service로 통합하여 리팩토링 필요
 func (p *PostServiceImpl) getSessionFromRedis(ctx context.Context, sessionInfo *dto.SessionInfo) (string, error) {
 	var sessionDataJSON string
 	var err error
@@ -161,6 +223,7 @@ func (p *PostServiceImpl) getSessionFromRedis(ctx context.Context, sessionInfo *
 	return sessionDataJSON, nil
 }
 
+// 중복되는 메서드는 common service로 통합하여 리팩토링 필요
 func (p *PostServiceImpl) CanEditPost(sessionInfo *dto.SessionInfo, postID string) (bool, error) {
 	ctx := context.Background()
 	sessionDataJSON, err := p.getSessionFromRedis(ctx, sessionInfo)

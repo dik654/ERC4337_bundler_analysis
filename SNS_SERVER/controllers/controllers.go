@@ -14,7 +14,6 @@ type Controllers struct {
 	UserController    UserController
 	PostController    PostController
 	CommentController CommentController
-	LikeController    LikeController
 }
 
 // 세션 정보를 추출하는 함수
@@ -37,12 +36,10 @@ func New(redisclient *redis.Client, services services.Services, googleOauthConfi
 	userController := NewUserController(redisclient, services.UserService, googleOauthConfig, oauthStateString)
 	postController := NewPostController(services.PostService)
 	commentController := NewCommentController(services.CommentService)
-	likeController := NewLikeController(services.LikeService)
 	return Controllers{
 		userController,
 		postController,
 		commentController,
-		likeController,
 	}
 }
 
@@ -50,5 +47,4 @@ func RegisterRoutes(controllers Controllers, rg *gin.RouterGroup) {
 	controllers.UserController.RegisterUserRoutes(rg)
 	controllers.PostController.RegisterPostRoutes(rg)
 	controllers.CommentController.RegisterCommentRoutes(rg)
-	controllers.LikeController.RegisterLikeRoutes(rg)
 }

@@ -33,7 +33,6 @@ var (
 	googleusercollection *mongo.Collection
 	postcollection       *mongo.Collection
 	commentcollection    *mongo.Collection
-	likecollection       *mongo.Collection
 	mongoclient          *mongo.Client
 	redisclient          *redis.Client
 	err                  error
@@ -103,7 +102,6 @@ func init() {
 			},
 		},
 	)
-	likecollection = mongoclient.Database("likedb").Collection("likes")
 	commentcollection = mongoclient.Database("commentdb").Collection("comments")
 	googleusercollection = mongoclient.Database("userdb").Collection("google_users")
 
@@ -111,7 +109,7 @@ func init() {
 	// GO_GIN_SERVER bootstrap
 	//
 
-	serviceInstances = services.New(redisclient, usercollection, googleusercollection, postcollection, commentcollection, likecollection, ctx)
+	serviceInstances = services.New(redisclient, usercollection, googleusercollection, postcollection, commentcollection, ctx)
 	controllerInstances = controllers.New(
 		redisclient,
 		serviceInstances,

@@ -1,8 +1,15 @@
 package services
 
+import (
+	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
+	"github.com/dik654/Go_projects/SNS_SERVER/models"
+)
+
 type CommentService interface {
-	CreateComment() error
-	GetComments() error
-	UpdateComment() error
-	DeleteComment() error
+	CreateComment(*dto.CreateCommentRequest, *dto.SessionInfo) error
+	GetComments(*dto.GetCommentRequest) ([]models.Comment, error)
+	UpdateComment(models.Comment) error
+	DeleteComment(string) error
+	DeleteComments(string) error
+	CanEditPost(*dto.SessionInfo, string) (bool, error)
 }
