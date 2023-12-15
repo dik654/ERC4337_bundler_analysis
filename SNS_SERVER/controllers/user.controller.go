@@ -39,7 +39,7 @@ func NewUserController(redisclient *redis.Client, userservice services.UserServi
 // RegisterUser godoc
 //
 //	@Summary		sign up regular user
-//	@Tags			register regular user
+//	@Tags			CRUD user
 //	@Description	write user informations to mongodb
 //	@Accept			json
 //	@Produce		json
@@ -62,7 +62,7 @@ func (uc *UserController) CreateUser(ctx *gin.Context) {
 // GetUser godoc
 //
 //	@Summary		get user data
-//	@Tags			register regular user
+//	@Tags			CRUD user
 //	@Description	get regular user informations to mongodb
 //	@Accept			json
 //	@Produce		json
@@ -82,7 +82,7 @@ func (uc *UserController) GetUser(ctx *gin.Context) {
 // GetAllUser godoc
 //
 //	@Summary		get user data
-//	@Tags			register regular user
+//	@Tags			CRUD user
 //	@Description	get all regular user informations to mongodb
 //	@Accept			json
 //	@Produce		json
@@ -100,7 +100,7 @@ func (uc *UserController) GetAll(ctx *gin.Context) {
 // UpdateUser godoc
 //
 //	@Summary		update regular user data
-//	@Tags			register regular user
+//	@Tags			CRUD user
 //	@Description	update regular user informations to mongodb
 //	@Accept			json
 //	@Produce		json
@@ -123,7 +123,7 @@ func (uc *UserController) UpdateUser(ctx *gin.Context) {
 // DeleteUser godoc
 //
 //	@Summary		delete regular user data
-//	@Tags			register regular user
+//	@Tags			CRUD user
 //	@Description	delete user information in mongodb
 //	@Accept			json
 //	@Produce		json

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
-	"github.com/dik654/Go_projects/SNS_SERVER/models"
 	"github.com/dik654/Go_projects/SNS_SERVER/services"
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +20,18 @@ func NewCommentController(commentservice services.CommentService) CommentControl
 	}
 }
 
+// CreateComment godoc
+//
+//	@Summary		write the comment
+//	@Tags			CRUD comment
+//	@Description	write the comment to mongodb
+//	@Description	id string | post id for comment
+//	@Description	content string | comment content
+//	@Accept			json
+//	@Produce		json
+//	@Param			comment	body		dto.CreateCommentRequest	true	"Comment Data"
+//	@Success		200		{string}	success
+//	@Router			/comment/create [post]
 func (cc *CommentController) CreateComment(ctx *gin.Context) {
 	sessionInfo, err := GetSessionInfo(ctx)
 	if err != nil {
@@ -40,6 +51,18 @@ func (cc *CommentController) CreateComment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
+// GetComments godoc
+//
+//	@Summary		get post comments
+//	@Tags			CRUD comment
+//	@Description	get post comments to mongodb
+//	@Description	type = 1, 2 | search comments type 1: post id, type 2: comment author
+//	@Description	body sring | Check whether the search body is included in the type search results
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	body		dto.GetCommentRequest	true	"post id"
+//	@Success		200	{object}	[]models.Comment
+//	@Router			/comment/get/ [post]
 func (cc *CommentController) GetComments(ctx *gin.Context) {
 	var getCommentRequest dto.GetCommentRequest
 	if err := ctx.ShouldBindJSON(&getCommentRequest); err != nil {
@@ -54,6 +77,16 @@ func (cc *CommentController) GetComments(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, comments)
 }
 
+// UpdateComment godoc
+//
+//	@Summary		update regular user data
+//	@Tags			CRUD comment
+//	@Description	comment owner update regular user informations to mongodb
+//	@Accept			json
+//	@Produce		json
+//	@Param			comment	request		body	dto.CreateCommentRequest	true	"Comment update request"
+//	@Success		200		{string}	success
+//	@Router			/comment/update [patch]
 func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 	sessionInfo, err := GetSessionInfo(ctx)
 	if err != nil {
@@ -61,25 +94,34 @@ func (cc *CommentController) UpdateComment(ctx *gin.Context) {
 		return
 	}
 
-	commentID := ctx.Param("comment_id")
-	if canEdit, err := cc.CommentService.CanEditPost(sessionInfo, commentID); canEdit != true || err != nil {
+	var commentRequest dto.CreateCommentRequest
+	if err := ctx.ShouldBindJSON(&commentRequest); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
-	var comment models.Comment
-	if err := ctx.ShouldBindJSON(&comment); err != nil {
+	if canEdit, err := cc.CommentService.CanEditPost(sessionInfo, commentRequest.PostID); canEdit != true || err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	comment.ID = commentID
-	if err := cc.CommentService.UpdateComment(comment); err != nil {
+
+	if err := cc.CommentService.UpdateComment(&commentRequest); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
+// DeleteComment godoc
+//
+//	@Summary		delete the comment
+//	@Tags			CRUD comment
+//	@Description	comment owner delete the comment from DB
+//	@Accept			json
+//	@Produce		json
+//	@Param			comment_id	path		string	true	"comment_id"
+//	@Success		200			{string}	success
+//	@Router			/comment/delete/{comment_id} [delete]
 func (cc *CommentController) DeleteComment(ctx *gin.Context) {
 	sessionInfo, err := GetSessionInfo(ctx)
 	if err != nil {
@@ -102,7 +144,7 @@ func (cc *CommentController) DeleteComment(ctx *gin.Context) {
 func (cc *CommentController) RegisterCommentRoutes(rg *gin.RouterGroup) {
 	commentroute := rg.Group("/comment")
 	commentroute.POST("/create", cc.CreateComment)
-	commentroute.GET("/get", cc.GetComments)
-	commentroute.PATCH("/update/:comment_id", cc.UpdateComment)
+	commentroute.POST("/get", cc.GetComments)
+	commentroute.PATCH("/update", cc.UpdateComment)
 	commentroute.DELETE("/delete/:comment_id", cc.DeleteComment)
 }

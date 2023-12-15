@@ -1,5 +1,47 @@
 basePath: /v1
 definitions:
+  dto.CreateCommentRequest:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+    type: object
+  dto.CreatePostRequest:
+    properties:
+      content:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.GetCommentRequest:
+    properties:
+      body:
+        type: string
+      type:
+        type: integer
+    type: object
+  dto.GetPostRequest:
+    properties:
+      body:
+        type: string
+      type:
+        type: integer
+    type: object
+  dto.PaginationRequest:
+    properties:
+      page_num:
+        type: integer
+      page_size:
+        type: integer
+    type: object
+  dto.PostLikeRequest:
+    properties:
+      id:
+        type: string
+      like:
+        type: boolean
+    type: object
   dto.SignInRequest:
     properties:
       id:
@@ -15,6 +57,30 @@ definitions:
         type: integer
       state:
         type: string
+    type: object
+  models.Comment:
+    properties:
+      author_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      post_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Judge:
+    properties:
+      body:
+        type: string
+      id:
+        type: string
+      type:
+        type: integer
     type: object
   models.User:
     properties:
@@ -39,6 +105,101 @@ info:
   title: SNS SERVER
   version: "1.0"
 paths:
+  /comment/create:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        write the comment to mongodb
+        id string | post id for comment
+        content string | comment content
+      parameters:
+      - description: Comment Data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: write the comment
+      tags:
+      - CRUD comment
+  /comment/delete/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: comment owner delete the comment from DB
+      parameters:
+      - description: comment_id
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: delete the comment
+      tags:
+      - CRUD comment
+  /comment/get/:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        get post comments to mongodb
+        type = 1, 2 | search comments type 1: post id, type 2: comment author
+        body sring | Check whether the search body is included in the type search results
+      parameters:
+      - description: post id
+        in: body
+        name: id
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Comment'
+            type: array
+      summary: get post comments
+      tags:
+      - CRUD comment
+  /comment/update:
+    patch:
+      consumes:
+      - application/json
+      description: comment owner update regular user informations to mongodb
+      parameters:
+      - description: Comment update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: update regular user data
+      tags:
+      - CRUD comment
   /login/glogin:
     get:
       consumes:
@@ -126,6 +287,181 @@ paths:
       summary: sign out regular user
       tags:
       - sign in/out regular user
+  /post/create:
+    post:
+      consumes:
+      - application/json
+      description: write post data to mongodb
+      parameters:
+      - description: Post request
+        in: body
+        name: post_request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: upload the post
+      tags:
+      - CRUD post
+  /post/delete/{post_id}:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        delete the post from DB
+        parameter post_id | specific post id
+      parameters:
+      - description: post_id
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: delete the post
+      tags:
+      - CRUD post
+  /post/get:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        get posts from DB
+        type = 1, 2, 3 | search posts type 1: title, type 2: content, type 3: author
+        body = string | Check whether the search body is included in the type search results
+      parameters:
+      - description: Post request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetPostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: get posts
+      tags:
+      - CRUD post
+  /post/getall:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        get all posts by pagination
+        page_num int64 | page number
+        page_size int64 | number of post in page
+      parameters:
+      - description: Page request
+        in: body
+        name: page_request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PaginationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: get all posts
+      tags:
+      - CRUD post
+  /post/judge:
+    post:
+      consumes:
+      - application/json
+      description: "write report of the post to DB\ntype uint8 | type 1: insult, type
+        2: sexual, type 3: violent\nid\tstring | specific violated post id\nbody string
+        | details of violation"
+      parameters:
+      - description: Judge request
+        in: body
+        name: judge_request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Judge'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: report the post
+      tags:
+      - CRUD post
+  /post/like:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        write user informations to mongodb
+        id string | specific post id
+        like bool | true: like it, false: unlike it
+      parameters:
+      - description: Like request
+        in: body
+        name: like_request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PostLikeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: sign up regular user
+      tags:
+      - CRUD post
+  /post/update/{post_id}:
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        post owner update the post
+        parameter post_id | specific post id
+        title string | title you want to change
+        content string | content you want to change
+      parameters:
+      - description: Update data
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePostRequest'
+      - description: post_id
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: update the post
+      tags:
+      - CRUD post
   /register/create:
     post:
       consumes:
@@ -147,7 +483,7 @@ paths:
             type: string
       summary: sign up regular user
       tags:
-      - register regular user
+      - CRUD user
   /register/delete/{id}:
     delete:
       consumes:
@@ -168,7 +504,7 @@ paths:
             type: string
       summary: delete regular user data
       tags:
-      - register regular user
+      - CRUD user
   /register/get/{id}:
     get:
       consumes:
@@ -189,7 +525,7 @@ paths:
             $ref: '#/definitions/models.User'
       summary: get user data
       tags:
-      - register regular user
+      - CRUD user
   /register/getall:
     get:
       consumes:
@@ -206,7 +542,7 @@ paths:
             type: array
       summary: get user data
       tags:
-      - register regular user
+      - CRUD user
   /register/update:
     patch:
       consumes:
@@ -228,5 +564,5 @@ paths:
             type: string
       summary: update regular user data
       tags:
-      - register regular user
+      - CRUD user
 swagger: "2.0"

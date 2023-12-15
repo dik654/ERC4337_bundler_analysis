@@ -5,7 +5,7 @@ import "time"
 type Judge struct {
 	Type   uint8  `json:"type"`
 	PostID string `json:"id"`
-	Body   uint8  `json:"body"`
+	Body   string `json:"body"`
 }
 
 type Post struct {

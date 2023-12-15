@@ -49,6 +49,7 @@ func (p *PostServiceImpl) CreatePost(request *dto.CreatePostRequest, sessionInfo
 	post.AuthorID = userID
 	post.Title = request.Title
 	post.Content = request.Content
+	post.Judge = []models.Judge{}
 	post.CreatedAt = time.Now()
 	post.UpdatedAt = time.Now()
 	_, err = p.postcollection.InsertOne(p.ctx, post)
@@ -108,8 +109,8 @@ func (p *PostServiceImpl) GetPosts(getPostRequest *dto.GetPostRequest) ([]models
 	return posts, nil
 }
 
-func (p *PostServiceImpl) UpdatePost(post models.Post) error {
-	filter := bson.M{"post_id": post.ID}
+func (p *PostServiceImpl) UpdatePost(postID string, post *dto.CreatePostRequest) error {
+	filter := bson.M{"post_id": postID}
 
 	// 업데이트할 내용 정의
 	update := bson.M{
@@ -185,7 +186,7 @@ func (p *PostServiceImpl) JudgePost(postJudgeRequest models.Judge) error {
 
 	update := bson.M{
 		"$push": bson.M{
-			"post_judges": postJudgeRequest,
+			"post_judge": postJudgeRequest,
 		},
 	}
 
@@ -224,23 +225,19 @@ func (p *PostServiceImpl) getSessionFromRedis(ctx context.Context, sessionInfo *
 }
 
 // 중복되는 메서드는 common service로 통합하여 리팩토링 필요
-func (p *PostServiceImpl) CanEditPost(sessionInfo *dto.SessionInfo, postID string) (bool, error) {
-	ctx := context.Background()
+func (p *PostServiceImpl) CanEditPost(ctx context.Context, sessionInfo *dto.SessionInfo, postID string) (bool, error) {
 	sessionDataJSON, err := p.getSessionFromRedis(ctx, sessionInfo)
 	if err != nil {
 		return false, err
 	}
-
 	var sessionData map[string]string
 	if err := json.Unmarshal([]byte(sessionDataJSON), &sessionData); err != nil {
 		return false, err
 	}
 	userID := sessionData["user_id"]
-
 	var post models.Post
 	if err := p.postcollection.FindOne(ctx, bson.M{"post_id": postID}).Decode(&post); err != nil {
 		return false, err
 	}
-
 	return post.AuthorID == userID, nil
 }

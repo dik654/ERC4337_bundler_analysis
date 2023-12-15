@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/dik654/Go_projects/SNS_SERVER/controllers/dto"
@@ -81,9 +80,8 @@ func (c *CommentServiceImpl) GetComments(getCommentRequest *dto.GetCommentReques
 	return comments, nil
 }
 
-func (c *CommentServiceImpl) UpdateComment(comment models.Comment) error {
-	fmt.Println(comment.ID)
-	filter := bson.M{"comment_id": comment.ID}
+func (c *CommentServiceImpl) UpdateComment(comment *dto.CreateCommentRequest) error {
+	filter := bson.M{"comment_id": comment.PostID}
 
 	// 업데이트할 내용 정의
 	update := bson.M{
@@ -117,10 +115,7 @@ func (c *CommentServiceImpl) DeleteComment(commentId string) error {
 
 func (c *CommentServiceImpl) DeleteComments(commentId string) error {
 	filter := bson.D{bson.E{Key: "comment_post_id", Value: commentId}}
-	result, _ := c.commentcollection.DeleteMany(c.ctx, filter)
-	if result.DeletedCount != 1 {
-		return errors.New("DELETE_USER_ERROR: no matched document found for delete")
-	}
+	c.commentcollection.DeleteMany(c.ctx, filter)
 	return nil
 }
 
@@ -148,8 +143,8 @@ func (c *CommentServiceImpl) getSessionFromRedis(ctx context.Context, sessionInf
 
 // 중복되는 메서드는 common service로 통합하여 리팩토링 필요
 func (c *CommentServiceImpl) CanEditPost(sessionInfo *dto.SessionInfo, commentID string) (bool, error) {
-	ctx := context.Background()
-	sessionDataJSON, err := c.getSessionFromRedis(ctx, sessionInfo)
+
+	sessionDataJSON, err := c.getSessionFromRedis(c.ctx, sessionInfo)
 	if err != nil {
 		return false, err
 	}
@@ -161,7 +156,7 @@ func (c *CommentServiceImpl) CanEditPost(sessionInfo *dto.SessionInfo, commentID
 	userID := sessionData["user_id"]
 
 	var comment models.Comment
-	if err := c.commentcollection.FindOne(ctx, bson.M{"comment_id": commentID}).Decode(&comment); err != nil {
+	if err := c.commentcollection.FindOne(c.ctx, bson.M{"comment_id": commentID}).Decode(&comment); err != nil {
 		return false, err
 	}
 

@@ -8,7 +8,7 @@ import (
 type CommentService interface {
 	CreateComment(*dto.CreateCommentRequest, *dto.SessionInfo) error
 	GetComments(*dto.GetCommentRequest) ([]models.Comment, error)
-	UpdateComment(models.Comment) error
+	UpdateComment(*dto.CreateCommentRequest) error
 	DeleteComment(string) error
 	DeleteComments(string) error
 	CanEditPost(*dto.SessionInfo, string) (bool, error)

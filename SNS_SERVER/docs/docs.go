@@ -16,6 +16,143 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/comment/create": {
+            "post": {
+                "description": "write the comment to mongodb\nid string | post id for comment\ncontent string | comment content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD comment"
+                ],
+                "summary": "write the comment",
+                "parameters": [
+                    {
+                        "description": "Comment Data",
+                        "name": "comment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/comment/delete/{comment_id}": {
+            "delete": {
+                "description": "comment owner delete the comment from DB",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD comment"
+                ],
+                "summary": "delete the comment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "comment_id",
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/comment/get/": {
+            "post": {
+                "description": "get post comments to mongodb\ntype = 1, 2 | search comments type 1: post id, type 2: comment author\nbody sring | Check whether the search body is included in the type search results",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD comment"
+                ],
+                "summary": "get post comments",
+                "parameters": [
+                    {
+                        "description": "post id",
+                        "name": "id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Comment"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/comment/update": {
+            "patch": {
+                "description": "comment owner update regular user informations to mongodb",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD comment"
+                ],
+                "summary": "update regular user data",
+                "parameters": [
+                    {
+                        "description": "Comment update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/login/glogin": {
             "get": {
                 "description": "sign out google user",
@@ -149,6 +286,249 @@ const docTemplate = `{
                 }
             }
         },
+        "/post/create": {
+            "post": {
+                "description": "write post data to mongodb",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "upload the post",
+                "parameters": [
+                    {
+                        "description": "Post request",
+                        "name": "post_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreatePostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/delete/{post_id}": {
+            "delete": {
+                "description": "delete the post from DB\nparameter post_id | specific post id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "delete the post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post_id",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/get": {
+            "post": {
+                "description": "get posts from DB\ntype = 1, 2, 3 | search posts type 1: title, type 2: content, type 3: author\nbody = string | Check whether the search body is included in the type search results",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "get posts",
+                "parameters": [
+                    {
+                        "description": "Post request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetPostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/getall": {
+            "post": {
+                "description": "get all posts by pagination\npage_num int64 | page number\npage_size int64 | number of post in page",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "get all posts",
+                "parameters": [
+                    {
+                        "description": "Page request",
+                        "name": "page_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PaginationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/judge": {
+            "post": {
+                "description": "write report of the post to DB\ntype uint8 | type 1: insult, type 2: sexual, type 3: violent\nid\tstring | specific violated post id\nbody string | details of violation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "report the post",
+                "parameters": [
+                    {
+                        "description": "Judge request",
+                        "name": "judge_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Judge"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/like": {
+            "post": {
+                "description": "write user informations to mongodb\nid string | specific post id\nlike bool | true: like it, false: unlike it",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "sign up regular user",
+                "parameters": [
+                    {
+                        "description": "Like request",
+                        "name": "like_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PostLikeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/post/update/{post_id}": {
+            "patch": {
+                "description": "post owner update the post\nparameter post_id | specific post id\ntitle string | title you want to change\ncontent string | content you want to change",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CRUD post"
+                ],
+                "summary": "update the post",
+                "parameters": [
+                    {
+                        "description": "Update data",
+                        "name": "post",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreatePostRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "post_id",
+                        "name": "post_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/register/create": {
             "post": {
                 "description": "write user informations to mongodb",
@@ -159,7 +539,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "register regular user"
+                    "CRUD user"
                 ],
                 "summary": "sign up regular user",
                 "parameters": [
@@ -193,7 +573,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "register regular user"
+                    "CRUD user"
                 ],
                 "summary": "delete regular user data",
                 "parameters": [
@@ -225,7 +605,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "register regular user"
+                    "CRUD user"
                 ],
                 "summary": "get user data",
                 "parameters": [
@@ -257,7 +637,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "register regular user"
+                    "CRUD user"
                 ],
                 "summary": "get user data",
                 "responses": {
@@ -283,7 +663,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "register regular user"
+                    "CRUD user"
                 ],
                 "summary": "update regular user data",
                 "parameters": [
@@ -309,6 +689,72 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.CreateCommentRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreatePostRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetCommentRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GetPostRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PaginationRequest": {
+            "type": "object",
+            "properties": {
+                "page_num": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PostLikeRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "like": {
+                    "type": "boolean"
+                }
+            }
+        },
         "dto.SignInRequest": {
             "type": "object",
             "properties": {
@@ -331,6 +777,43 @@ const docTemplate = `{
                 },
                 "state": {
                     "type": "string"
+                }
+            }
+        },
+        "models.Comment": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "post_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Judge": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
                 }
             }
         },
