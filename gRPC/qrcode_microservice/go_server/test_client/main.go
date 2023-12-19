@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/proto"
+	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

@@ -19,11 +19,16 @@ func NewLoggingService(next OtpAuthenticator) OtpAuthenticator {
 
 func (s *loggingService) GeneratePrivateKey(ctx context.Context, id string) (privateKey string, err error) {
 	defer func(begin time.Time) {
-		logrus.WithFields(logrus.Fields{
-			"took":  time.Since(begin),
-			"error": err,
-			"id":    id,
-		})
+		fields := logrus.Fields{
+			"took": time.Since(begin),
+			"id":   id,
+		}
+		if err != nil {
+			fields["error"] = err
+			logrus.WithFields(fields).Error("GeneratePrivateKey failed")
+		} else {
+			logrus.WithFields(fields).Info("GeneratePrivateKey success")
+		}
 	}(time.Now())
 
 	return s.next.GeneratePrivateKey(ctx, id)
@@ -31,11 +36,16 @@ func (s *loggingService) GeneratePrivateKey(ctx context.Context, id string) (pri
 
 func (s *loggingService) GenerateOtp(ctx context.Context, id string) (otp string, err error) {
 	defer func(begin time.Time) {
-		logrus.WithFields(logrus.Fields{
-			"took":  time.Since(begin),
-			"error": err,
-			"id":    id,
-		})
+		fields := logrus.Fields{
+			"took": time.Since(begin),
+			"id":   id,
+		}
+		if err != nil {
+			fields["error"] = err
+			logrus.WithFields(fields).Error("GenerateOtp failed")
+		} else {
+			logrus.WithFields(fields).Info("GenerateOtp success")
+		}
 	}(time.Now())
 
 	return s.next.GenerateOtp(ctx, id)

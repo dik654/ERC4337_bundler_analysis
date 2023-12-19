@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/proto"
+	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/pb"
 )
 
 func callGeneratePrivateKey(client pb.OtpAuthenticatorClient, id string) {
