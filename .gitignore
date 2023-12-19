@@ -1,0 +1,17 @@
+# IDEs and editors
+gRPC/qrcode_microservice/nest_client/.idea
+gRPC/qrcode_microservice/nest_client/.project
+gRPC/qrcode_microservice/nest_client/.classpath
+gRPC/qrcode_microservice/nest_client/.c9/
+gRPC/qrcode_microservice/nest_client/*.launch
+gRPC/qrcode_microservice/nest_client/.settings/
+gRPC/qrcode_microservice/nest_client/*.sublime-workspace
+
+# IDE - VSCode
+gRPC/qrcode_microservice/nest_client/.vscode/*
+!gRPC/qrcode_microservice/nest_client/.vscode/settings.json
+!gRPC/qrcode_microservice/nest_client/.vscode/tasks.json
+!gRPC/qrcode_microservice/nest_client/.vscode/launch.json
+!gRPC/qrcode_microservice/nest_client/.vscode/extensions.json
+
+gRPC/qrcode_microservice/nest_client/node_modules/
