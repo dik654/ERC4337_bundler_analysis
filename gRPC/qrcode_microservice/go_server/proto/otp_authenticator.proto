@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package = "./proto";
+
+package otp_authenticator;
+
+service OtpAuthenticator {
+    rpc GeneratePrivateKey(GeneratePrivateKeyRequest) returns (GeneratePrivateKeyResponse);
+
+    rpc GenerateOtp(GenerateOtpRequest) returns (GenerateOtpRequestResponse);
+}
+
+message GeneratePrivateKeyRequest {
+    string id = 1;
+}
+
+message GeneratePrivateKeyResponse {
+    string privateKey = 1;
+}
+
+message GenerateOtpRequest {
+    string id = 1;
+}
+
+message GenerateOtpRequestResponse {
+    string otp = 1;
+}
