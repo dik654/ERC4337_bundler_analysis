@@ -4,10 +4,20 @@ option go_package = "./proto";
 
 package otp_authenticator;
 
-service OtpAuthenticator {
-    rpc GeneratePrivateKey(GeneratePrivateKeyRequest) returns (GeneratePrivateKeyResponse);
+import "google/api/annotations.proto";
 
-    rpc GenerateOtp(GenerateOtpRequest) returns (GenerateOtpRequestResponse);
+service OtpAuthenticator {
+    rpc GeneratePrivateKey(GeneratePrivateKeyRequest) returns (GeneratePrivateKeyResponse) {
+        option (google.api.http) = {
+            get: "/v1/privatekey/{id}"
+        };
+    };
+
+    rpc GenerateOtp(GenerateOtpRequest) returns (GenerateOtpRequestResponse) {
+       option (google.api.http) = {
+            get: "/v1/otp/{id}"
+        }; 
+    };
 }
 
 message GeneratePrivateKeyRequest {

@@ -4,20 +4,9 @@ import (
 	"log"
 	"net"
 
-	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/proto"
+	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/pb"
 	"google.golang.org/grpc"
 )
-
-type OtpAuthenticatorServer struct {
-	pb.OtpAuthenticatorServer
-	authenticator OtpAuthenticator
-}
-
-func NewOtpAuthenticatorServer(authenticator OtpAuthenticator) *OtpAuthenticatorServer {
-	return &OtpAuthenticatorServer{
-		authenticator: authenticator,
-	}
-}
 
 func main() {
 	secrets := make(map[string]string)
@@ -29,8 +18,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	otpAuthenticatorServer := NewOtpAuthenticatorServer(authenticator)
-	pb.RegisterGreetServiceServer(grpcServer, otpAuthenticatorServer)
+	pb.RegisterOtpAuthenticatorServer(grpcServer, NewOtpAuthenticatorServer(authenticator))
 	log.Printf("server started at %v", lis.Addr())
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to start: %v", err)
