@@ -53,7 +53,7 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
         //     message: 'success',
         //     response: {
         //       id: '5IiBsoCNyVl_Ali28i3YxnJzxenj2DwNcASbwkXR6BE',
-        //       name: '홍길',
+        //       name: '홍길동',
         //       birthday: '03-24',
         //       birthyear: '1945'
         //     }
@@ -61,7 +61,6 @@ export class NaverStrategy extends PassportStrategy(Strategy) {
         // }
         // [Function: verified]
 
-        const once_token = this.authService.onceToken(user_profile);
-        return { accessToken, refreshToken, once_token, type: 'once' }
+        return { accessToken, refreshToken, profile, type: 'once' }
     }
 }
