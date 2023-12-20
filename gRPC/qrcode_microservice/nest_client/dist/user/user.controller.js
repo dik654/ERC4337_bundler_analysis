@@ -21,7 +21,7 @@ let UserController = class UserController {
     }
     async callback(req, res) {
         res.cookie('access_token', req.user.accessToken);
-        res.redirect('http://localhost:8080/qrcode');
+        res.redirect(`http://localhost:8080/qrcode/${req.user.profile.id}`);
         res.end();
     }
 };

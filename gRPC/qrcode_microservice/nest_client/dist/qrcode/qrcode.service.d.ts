@@ -1,3 +1,4 @@
 export declare class QrcodeService {
-    generateQR(): Promise<any>;
+    generateQR(id: string): Promise<any>;
+    verifyOtp(id: string, otp: string): Promise<any>;
 }

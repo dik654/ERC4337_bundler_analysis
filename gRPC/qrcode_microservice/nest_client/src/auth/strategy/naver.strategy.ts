@@ -1,11 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from 'passport-naver-v2';
-import { AuthService } from "../auth.service";
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy) {
-    constructor(private authService: AuthService) {
+    constructor() {
         super({
         clientID: process.env.NAVER_CLIENT_ID,
         clientSecret: process.env.NAVER_CLIENT_SECRET,

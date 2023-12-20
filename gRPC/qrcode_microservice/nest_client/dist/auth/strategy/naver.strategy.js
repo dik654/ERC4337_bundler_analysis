@@ -13,15 +13,13 @@ exports.NaverStrategy = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const passport_naver_v2_1 = require("passport-naver-v2");
-const auth_service_1 = require("../auth.service");
 let NaverStrategy = class NaverStrategy extends (0, passport_1.PassportStrategy)(passport_naver_v2_1.Strategy) {
-    constructor(authService) {
+    constructor() {
         super({
             clientID: process.env.NAVER_CLIENT_ID,
             clientSecret: process.env.NAVER_CLIENT_SECRET,
             callbackURL: process.env.NAVER_CALLBACK_URL,
         });
-        this.authService = authService;
     }
     async validate(accessToken, refreshToken, profile, done) {
         const user_email = profile._json.email;
@@ -32,13 +30,12 @@ let NaverStrategy = class NaverStrategy extends (0, passport_1.PassportStrategy)
             user_nick,
             user_provider,
         };
-        const once_token = this.authService.onceToken(user_profile);
-        return { accessToken, refreshToken, once_token, type: 'once' };
+        return { accessToken, refreshToken, profile, type: 'once' };
     }
 };
 NaverStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [])
 ], NaverStrategy);
 exports.NaverStrategy = NaverStrategy;
 //# sourceMappingURL=naver.strategy.js.map

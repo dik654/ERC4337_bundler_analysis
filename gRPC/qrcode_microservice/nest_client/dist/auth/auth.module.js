@@ -8,10 +8,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
-const auth_service_1 = require("./auth.service");
 const user_module_1 = require("../user/user.module");
 const passport_1 = require("@nestjs/passport");
-const jwt_1 = require("@nestjs/jwt");
 const naver_strategy_1 = require("./strategy/naver.strategy");
 let AuthModule = class AuthModule {
 };
@@ -23,12 +21,9 @@ AuthModule = __decorate([
                 defaultStrategy: 'jwt',
                 session: false,
             }),
-            jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET,
-            }),
         ],
-        providers: [auth_service_1.AuthService, naver_strategy_1.NaverStrategy],
-        exports: [auth_service_1.AuthService, jwt_1.JwtModule, passport_1.PassportModule],
+        providers: [naver_strategy_1.NaverStrategy],
+        exports: [passport_1.PassportModule],
     })
 ], AuthModule);
 exports.AuthModule = AuthModule;

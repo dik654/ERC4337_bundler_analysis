@@ -1,20 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import * as qrcode from 'qrcode';
 import axios from 'axios';
 
-
 @Injectable()
 export class QrcodeService {
-    @Cron(CronExpression.EVERY_5_SECONDS)
-    async generateQR() {
+    async generateQR(id: string) {
         try {
-            // const response = await axios.get('http://localhost:8080/qrcode')
-            // console.log('Response:', response.data)
-            const qrCodeDataURL = await qrcode.toDataURL(Math.random().toString())
+            const response = await axios.get(`http://localhost:3001/v1/otp/privatekey/${id}`)
+            const qrCodeDataURL = await qrcode.toDataURL(response.data.privateKey)
             return `<img src="${qrCodeDataURL}" alt="QR Code" />`
         } catch (error) {
            return error 
+        }
+    }
+
+    async verifyOtp(id: string, otp: string) {
+        try {
+            const response = await axios.post(`http://localhost:3001/v1/otp/verify`, {
+                id: id,
+                otp: otp
+            }) 
+            return response.data.verification
+        } catch (error) {
+            return error
         }
     }
 }
