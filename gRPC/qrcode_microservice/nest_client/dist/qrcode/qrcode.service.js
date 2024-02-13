@@ -13,7 +13,7 @@ const axios_1 = require("axios");
 let QrcodeService = class QrcodeService {
     async generateQR(id) {
         try {
-            const response = await axios_1.default.get(`http://localhost:3001/v1/otp/privatekey/${id}`);
+            const response = await axios_1.default.get(`http://localhost:3002/v1/otp/privatekey/${id}`);
             const qrCodeDataURL = await qrcode.toDataURL(response.data.privateKey);
             return `<img src="${qrCodeDataURL}" alt="QR Code" />`;
         }
@@ -23,7 +23,7 @@ let QrcodeService = class QrcodeService {
     }
     async verifyOtp(id, otp) {
         try {
-            const response = await axios_1.default.post(`http://localhost:3001/v1/otp/verify`, {
+            const response = await axios_1.default.post(`http://localhost:3002/v1/otp/verify`, {
                 id: id,
                 otp: otp
             });

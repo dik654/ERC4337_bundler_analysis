@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"log"
+	"net"
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -33,8 +36,12 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
-	return http.ListenAndServe(":3001", mux)
+	httpListener, err := net.Listen("tcp", ":3002")
+	if err != nil {
+		return fmt.Errorf("Failed to listen on %v: %v", httpListener.Addr(), err)
+	}
+	log.Printf("Gateway server started at %v", httpListener.Addr())
+	return http.Serve(httpListener, mux)
 }
 
 func main() {

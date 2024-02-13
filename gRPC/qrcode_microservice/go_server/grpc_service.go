@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/pb"
 )
@@ -18,11 +19,11 @@ func NewOtpAuthenticatorServer(authenticator OtpAuthenticator) *OtpAuthenticator
 }
 
 func (s *OtpAuthenticatorServer) GeneratePrivateKey(ctx context.Context, req *pb.GeneratePrivateKeyRequest) (*pb.GeneratePrivateKeyResponse, error) {
-	privateKey, err := s.authenticator.GeneratePrivateKey(ctx, req.Id)
+	url, err := s.authenticator.GeneratePrivateKey(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.GeneratePrivateKeyResponse{PrivateKey: privateKey}, nil
+	return &pb.GeneratePrivateKeyResponse{Url: url}, nil
 }
 
 func (s *OtpAuthenticatorServer) GenerateOtp(ctx context.Context, req *pb.GenerateOtpRequest) (*pb.GenerateOtpRequestResponse, error) {
@@ -31,4 +32,13 @@ func (s *OtpAuthenticatorServer) GenerateOtp(ctx context.Context, req *pb.Genera
 		return nil, err
 	}
 	return &pb.GenerateOtpRequestResponse{Otp: otp}, nil
+}
+
+func (s *OtpAuthenticatorServer) VerifyOtp(ctx context.Context, req *pb.GenerateVerifyOtpRequest) (*pb.GenerateVerifyOtpResponse, error) {
+	fmt.Println(req)
+	ok, err := s.authenticator.VerifyOtp(ctx, req.Id, req.Otp)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GenerateVerifyOtpResponse{Verification: ok}, nil
 }

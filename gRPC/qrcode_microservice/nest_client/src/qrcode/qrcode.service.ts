@@ -6,7 +6,7 @@ import axios from 'axios';
 export class QrcodeService {
     async generateQR(id: string) {
         try {
-            const response = await axios.get(`http://localhost:3001/v1/otp/privatekey/${id}`)
+            const response = await axios.get(`http://localhost:3002/v1/otp/privatekey/${id}`)
             const qrCodeDataURL = await qrcode.toDataURL(response.data.privateKey)
             return `<img src="${qrCodeDataURL}" alt="QR Code" />`
         } catch (error) {
@@ -16,7 +16,7 @@ export class QrcodeService {
 
     async verifyOtp(id: string, otp: string) {
         try {
-            const response = await axios.post(`http://localhost:3001/v1/otp/verify`, {
+            const response = await axios.post(`http://localhost:3002/v1/otp/verify`, {
                 id: id,
                 otp: otp
             }) 

@@ -1,3 +1,12 @@
+build:
+	go build -o bin/go_otp_server 
+	go build -o bin/go_otp_server_gateway ./gateway/main.go
+run:
+	go run *.go
+
+run_gateway:
+	go run ./gateway/main.go
+
 protoc:
 	go install \
     github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \

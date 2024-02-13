@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	pb "github.com/dik654/Go_projects/gRPC/qrcode_microservice/go_server/pb"
 	"google.golang.org/grpc"
@@ -22,5 +23,7 @@ func main() {
 	client := pb.NewOtpAuthenticatorClient(conn)
 
 	callGeneratePrivateKey(client, "test")
+	callGenerateOtp(client, "test")
+	time.Sleep(10 * time.Second)
 	callGenerateOtp(client, "test")
 }

@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	OtpAuthenticator_GeneratePrivateKey_FullMethodName = "/otp_authenticator.OtpAuthenticator/GeneratePrivateKey"
 	OtpAuthenticator_GenerateOtp_FullMethodName        = "/otp_authenticator.OtpAuthenticator/GenerateOtp"
+	OtpAuthenticator_VerifyOtp_FullMethodName          = "/otp_authenticator.OtpAuthenticator/VerifyOtp"
 )
 
 // OtpAuthenticatorClient is the client API for OtpAuthenticator service.
@@ -29,6 +30,7 @@ const (
 type OtpAuthenticatorClient interface {
 	GeneratePrivateKey(ctx context.Context, in *GeneratePrivateKeyRequest, opts ...grpc.CallOption) (*GeneratePrivateKeyResponse, error)
 	GenerateOtp(ctx context.Context, in *GenerateOtpRequest, opts ...grpc.CallOption) (*GenerateOtpRequestResponse, error)
+	VerifyOtp(ctx context.Context, in *GenerateVerifyOtpRequest, opts ...grpc.CallOption) (*GenerateVerifyOtpResponse, error)
 }
 
 type otpAuthenticatorClient struct {
@@ -57,12 +59,22 @@ func (c *otpAuthenticatorClient) GenerateOtp(ctx context.Context, in *GenerateOt
 	return out, nil
 }
 
+func (c *otpAuthenticatorClient) VerifyOtp(ctx context.Context, in *GenerateVerifyOtpRequest, opts ...grpc.CallOption) (*GenerateVerifyOtpResponse, error) {
+	out := new(GenerateVerifyOtpResponse)
+	err := c.cc.Invoke(ctx, OtpAuthenticator_VerifyOtp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OtpAuthenticatorServer is the server API for OtpAuthenticator service.
 // All implementations must embed UnimplementedOtpAuthenticatorServer
 // for forward compatibility
 type OtpAuthenticatorServer interface {
 	GeneratePrivateKey(context.Context, *GeneratePrivateKeyRequest) (*GeneratePrivateKeyResponse, error)
 	GenerateOtp(context.Context, *GenerateOtpRequest) (*GenerateOtpRequestResponse, error)
+	VerifyOtp(context.Context, *GenerateVerifyOtpRequest) (*GenerateVerifyOtpResponse, error)
 	mustEmbedUnimplementedOtpAuthenticatorServer()
 }
 
@@ -75,6 +87,9 @@ func (UnimplementedOtpAuthenticatorServer) GeneratePrivateKey(context.Context, *
 }
 func (UnimplementedOtpAuthenticatorServer) GenerateOtp(context.Context, *GenerateOtpRequest) (*GenerateOtpRequestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateOtp not implemented")
+}
+func (UnimplementedOtpAuthenticatorServer) VerifyOtp(context.Context, *GenerateVerifyOtpRequest) (*GenerateVerifyOtpResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyOtp not implemented")
 }
 func (UnimplementedOtpAuthenticatorServer) mustEmbedUnimplementedOtpAuthenticatorServer() {}
 
@@ -125,6 +140,24 @@ func _OtpAuthenticator_GenerateOtp_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OtpAuthenticator_VerifyOtp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateVerifyOtpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OtpAuthenticatorServer).VerifyOtp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OtpAuthenticator_VerifyOtp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OtpAuthenticatorServer).VerifyOtp(ctx, req.(*GenerateVerifyOtpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OtpAuthenticator_ServiceDesc is the grpc.ServiceDesc for OtpAuthenticator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,6 +172,10 @@ var OtpAuthenticator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateOtp",
 			Handler:    _OtpAuthenticator_GenerateOtp_Handler,
+		},
+		{
+			MethodName: "VerifyOtp",
+			Handler:    _OtpAuthenticator_VerifyOtp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

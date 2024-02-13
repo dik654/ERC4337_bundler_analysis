@@ -17,7 +17,7 @@ func NewLoggingService(next OtpAuthenticator) OtpAuthenticator {
 	}
 }
 
-func (s *loggingService) GeneratePrivateKey(ctx context.Context, id string) (privateKey string, err error) {
+func (s *loggingService) GeneratePrivateKey(ctx context.Context, id string) (url string, err error) {
 	defer func(begin time.Time) {
 		fields := logrus.Fields{
 			"took": time.Since(begin),
@@ -49,4 +49,21 @@ func (s *loggingService) GenerateOtp(ctx context.Context, id string) (otp string
 	}(time.Now())
 
 	return s.next.GenerateOtp(ctx, id)
+}
+
+func (s *loggingService) VerifyOtp(ctx context.Context, id string, otp string) (verification bool, err error) {
+	defer func(begin time.Time) {
+		fields := logrus.Fields{
+			"took": time.Since(begin),
+			"id":   id,
+		}
+		if err != nil {
+			fields["error"] = err
+			logrus.WithFields(fields).Error("VeirifyOtp failed")
+		} else {
+			logrus.WithFields(fields).Info("VeirifyOtp success")
+		}
+	}(time.Now())
+
+	return s.next.VerifyOtp(ctx, id, otp)
 }

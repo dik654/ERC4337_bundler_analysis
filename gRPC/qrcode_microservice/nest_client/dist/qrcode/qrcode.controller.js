@@ -23,7 +23,6 @@ let QrcodeController = class QrcodeController {
         return this.qrcodeService.generateQR(id);
     }
     async verifyOtp(body) {
-        console.log(body);
         return this.qrcodeService.verifyOtp(body.id, body.otp);
     }
 };

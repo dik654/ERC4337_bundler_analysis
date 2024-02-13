@@ -9,14 +9,21 @@ import "google/api/annotations.proto";
 service OtpAuthenticator {
     rpc GeneratePrivateKey(GeneratePrivateKeyRequest) returns (GeneratePrivateKeyResponse) {
         option (google.api.http) = {
-            get: "/v1/privatekey/{id}"
+            get: "/v1/otp/privatekey/{id}"
         };
     };
 
     rpc GenerateOtp(GenerateOtpRequest) returns (GenerateOtpRequestResponse) {
        option (google.api.http) = {
-            get: "/v1/otp/{id}"
+            get: "/v1/otp/generate/{id}"
         }; 
+    };
+
+    rpc VerifyOtp(GenerateVerifyOtpRequest) returns (GenerateVerifyOtpResponse) {
+        option (google.api.http) = {
+            post: "/v1/otp/verify"
+            body: "*"
+        };
     };
 }
 
@@ -25,7 +32,7 @@ message GeneratePrivateKeyRequest {
 }
 
 message GeneratePrivateKeyResponse {
-    string privateKey = 1;
+    string url = 1;
 }
 
 message GenerateOtpRequest {
@@ -34,4 +41,13 @@ message GenerateOtpRequest {
 
 message GenerateOtpRequestResponse {
     string otp = 1;
+}
+
+message GenerateVerifyOtpRequest {
+    string id = 1;
+    string otp = 2;
+}
+
+message GenerateVerifyOtpResponse {
+    bool verification = 1;
 }
